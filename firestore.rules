@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Logic for LogEntry
+    function isValidLogEntry(data) {
+      return data.keys().hasAll(['type', 'content', 'advisorName', 'createdAt'])
+        && data.keys().size() == 4
+        && data.type in ['photo', 'note', 'video']
+        && data.content is string && data.content.size() <= 1000
+        && data.advisorName is string && data.advisorName.size() <= 100
+        && data.createdAt == request.time;
+    }
+
+    match /bitacora/{logId} {
+      allow list, get: if true; 
+      allow create: if isValidId(logId) && isValidLogEntry(incoming());
+      allow update, delete: if false; 
+    }
+
+    match /visitas/{visitaId} {
+      allow create: if true; // Permitir agendar visitas temporalmente para el PanelAsesor
+      allow read: if true; // Permitir leer los datos de la visita para la bienvenida
+      allow update, delete: if false;
+
+      match /bitacora/{logId} {
+        allow read: if true; 
+        allow create, update: if true; // Permitir agregar notas y fotos a la visita
+        allow delete: if false; 
+      }
+    }
+
+    match /asesores/{advisorId} {
+      allow list, get: if true; 
+      allow write: if false; // Perfiles son administrados externamente o solo lectura para app
+    }
+  }
+}

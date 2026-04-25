@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "LogEntry": {
+      "title": "LogEntry",
+      "description": "Entrada multimedia en la bitácora de visita.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["photo", "note", "video"],
+          "description": "Tipo de contenido capturado."
+        },
+        "content": {
+          "type": "string",
+          "description": "Contenido o ruta del archivo capturado."
+        },
+        "advisorName": {
+          "type": "string",
+          "description": "Nombre del asesor que realizó la captura."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fecha de creación del registro."
+        }
+      },
+      "required": ["type", "content", "advisorName", "createdAt"]
+    } ,
+    "Advisor": {
+      "title": "Advisor",
+      "description": "Datos del asesor inmobiliario.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "avatar": { "type": "string" }
+      },
+      "required": ["name", "phone", "role", "avatar"]
+    }
+  },
+  "firestore": {
+    "/bitacora/{logId}": {
+      "schema": "LogEntry",
+      "description": "Colección de registros de visitas inmobiliarias."
+    },
+    "/asesores/{advisorId}": {
+      "schema": "Advisor",
+      "description": "Colección de perfiles de asesores."
+    }
+  }
+}
