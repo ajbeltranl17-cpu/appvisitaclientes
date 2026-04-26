@@ -57,12 +57,12 @@ export const Dashboard = () => {
           </div>
           <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative mb-4 shadow-inner">
             <img 
-              src="/mapa-veracruz.jpg" 
-              alt="Mapa" 
-              className="w-full h-full object-cover"
-              onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80' }}
-            />
-          </div>
+             {/* Buscas la parte del mapa y asegúrate que la imagen quede así: */}
+<img 
+  src="/mapa-zona.jpg" 
+  alt="Mapa de la zona" 
+  className="w-full h-full object-cover"
+/>
           <a 
             href={urlGoogleMaps} 
             target="_blank" 
