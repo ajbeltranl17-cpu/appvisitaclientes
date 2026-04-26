@@ -61,16 +61,22 @@ export const Dashboard = () => {
           </a>
         </div>
 
-        {/* Módulos de Herramientas de Decisión */}
+        {/* Módulos de Herramientas de Decisión (LISTA COMPLETA) */}
         <div className="grid grid-cols-2 gap-4">
           {[
-            { id: 'iniciar', title: 'Iniciar Visita', icon: 'directions_walk', color: 'bg-blue-600', route: `/iniciar-visita/${idVisita}` },
-            { id: 'analisis', title: 'La Zona', icon: 'explore', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
-            { id: 'plusvalia', title: 'Plusvalía', icon: 'trending_up', color: 'bg-indigo-600', route: `/plusvalia/${idVisita}` },
-            { id: 'hipoteca', title: 'Hipoteca', icon: 'payments', color: 'bg-emerald-600', route: `/calculadora/${idVisita}` },
-          ].map((item) => (
+            { title: 'Iniciar Visita', icon: 'directions_walk', color: 'bg-blue-600', route: `/iniciar-visita/${idVisita}` },
+            { title: 'La Zona', icon: 'explore', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
+            { title: 'Galería', icon: 'photo_library', color: 'bg-purple-600', route: `/galeria/${idVisita}` },
+            { title: 'Amueblar IA', icon: 'chair', color: 'bg-orange-500', route: `/amueblar/${idVisita}` },
+            { title: 'Swipe Pareja', icon: 'swipe', color: 'bg-pink-500', route: `/swipe/${idVisita}` },
+            { title: 'Mis Deseos', icon: 'favorite', color: 'bg-red-500', route: `/deseos/${idVisita}` },
+            { title: 'Catálogo', icon: 'account_balance', color: 'bg-slate-700', route: `/catalogo/${idVisita}` },
+            { title: 'Comparar', icon: 'balance', color: 'bg-amber-600', route: `/matriz/${idVisita}` },
+            { title: 'Plusvalía', icon: 'trending_up', color: 'bg-indigo-600', route: `/plusvalia/${idVisita}` },
+            { title: 'Hipoteca', icon: 'payments', color: 'bg-emerald-600', route: `/calculadora/${idVisita}` },
+          ].map((item, idx) => (
             <button
-              key={item.id}
+              key={idx}
               onClick={() => navigate(item.route)}
               className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-[#C5A059]/30"
             >
