@@ -112,7 +112,7 @@ export const AnalisisZona = () => {
           <div className="bg-white rounded-xl p-2 shadow-sm border border-[#e2e3e1]">
             <div className="relative w-full h-56 md:h-72 rounded-lg overflow-hidden bg-[#e2e3e1]">
               <img 
-                src={IMAGEN_MAPA_ZONA} 
+               src="/mapaveracruz.jpg"
                 alt="Mapa de la Zona" 
                 className="w-full h-full object-cover"
               />

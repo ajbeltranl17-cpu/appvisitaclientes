@@ -59,7 +59,7 @@ export const Dashboard = () => {
             <img 
              {/* Buscas la parte del mapa y asegúrate que la imagen quede así: */}
 <img 
-  src="/mapa-zona.jpg?v=1" 
+  src="/mapaveracruz.jpg"
   alt="Mapa de la zona" 
   className="w-full h-full object-cover"
   onError={(e) => {
