@@ -1,253 +1,150 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../services/firebaseConfig';
-import { BrandLogo } from '../components/BrandLogo';
+import React from 'react';
+import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const AgendarVisita = () => {
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Estados del formulario (Cliente)
-  const [nombreCliente, setNombreCliente] = useState('');
-  const [whatsappCliente, setWhatsappCliente] = useState('');
-  
-  // Estados del formulario (Propiedad)
-  const [ubicacionPropiedad, setUbicacionPropiedad] = useState('');
-  const [urlPropiedad, setUrlPropiedad] = useState('');
-  const [urlGoogleMaps, setUrlGoogleMaps] = useState('');
-  const [fechaVisita, setFechaVisita] = useState('');
-  const [horaVisita, setHoraVisita] = useState('');
+  // Icono oficial de WhatsApp en formato vectorial (SVG)
+  const iconoWhatsApp = (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#25D366]">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+    </svg>
+  );
 
-  // Estados del formulario (Asesor)
-  const [nombreAsesor, setNombreAsesor] = useState('');
-  const [whatsappAsesor, setWhatsappAsesor] = useState('');
-
-  const handleCrearVisita = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Guardar todo el ecosistema de datos en Firebase
-      const docRef = await addDoc(collection(db, 'visitas'), {
-        nombreCliente,
-        whatsappCliente: whatsappCliente.replace(/\D/g, ''), // Solo números
-        ubicacionPropiedad,
-        urlPropiedad,
-        urlGoogleMaps, // Ahora guarda el link simple de compartir
-        fechaVisita,
-        horaVisita,
-        nombreAsesor,
-        telefonoAsesor: whatsappAsesor.replace(/\D/g, ''), // Guardado para compatibilidad con otras pantallas
-        fotoAsesor: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80" // Foto genérica por defecto
-      });
-
-      // Redirigir al panel de control de esta nueva visita
-      navigate(`/dashboard/${docRef.id}`);
-    } catch (error) {
-      console.error("Error al crear visita:", error);
-      alert("Hubo un error al crear la visita.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  // El motor que dispara WhatsApp
+  const enviarInvitacion = () => {
+    // Generamos un ID simulado por ahora (En Fase 3 Firebase lo creará real)
+    const idVisitaSimulado = "v12345"; 
+    
+    // El enlace que recibirá el cliente (apuntando a la página de Bienvenida que haremos enseguida)
+    const enlaceBienvenida = `https://${window.location.hostname}/bienvenida/${idVisitaSimulado}`;
+    
+    // El mensaje persuasivo
+    const mensaje = `¡Hola! He preparado una experiencia interactiva para nuestra próxima visita. Puedes acceder a tu panel privado aquí para ver todos los detalles: ${enlaceBienvenida}`;
+    
+    // Abre WhatsApp con el mensaje cargado
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
   };
 
   return (
-    <div className="bg-[#f9f9f7] min-h-screen text-[#1a1c1b] font-body pb-20">
-      
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-[#e2e3e1]">
-        <div className="flex items-center gap-3">
-          <BrandLogo className="h-8 w-auto" />
-          <span className="font-headline font-extrabold text-[#1A3651] uppercase tracking-wider text-sm md:text-base">Nueva Visita</span>
-        </div>
-        <button 
-          onClick={() => navigate('/admin/asesores')}
-          className="bg-[#f4f4f2] text-[#43474d] hover:text-[#1A3651] px-4 py-2 rounded-lg flex items-center gap-2 font-semibold text-sm transition-colors border border-[#e2e3e1]"
-        >
-          <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
-          <span className="hidden sm:inline">Admin</span>
-        </button>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      {/* Como es panel de administrador, el encabezado solo lleva el logo */}
+      <EncabezadoGlobal />
 
-      <main className="max-w-3xl mx-auto px-4 pt-10">
+      <main className="max-w-3xl mx-auto p-4 sm:p-8">
         
-        {/* Título de la página */}
-        <div className="mb-8 text-center md:text-left">
-          <span className="text-[#C5A059] font-headline font-bold tracking-widest uppercase text-xs mb-2 block">Acceso Restringido - Agentes</span>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-headline text-[#1A3651] mb-2">Agendar Visita</h1>
-          <p className="text-[#43474d] text-lg font-light">Gestión de Clientes</p>
-          <p className="text-[#73777e] text-sm mt-4 max-w-xl mx-auto md:mx-0">Complete los detalles a continuación para generar un entorno interactivo y enviarlo directamente a su cliente.</p>
+        <div className="mb-8">
+          <span className="text-[#C5A059] uppercase font-bold text-xs tracking-widest">
+            Acceso Restringido - Agentes
+          </span>
+          <h1 className="text-3xl font-black text-[#00213b] mt-1 mb-2">Agendar Visita</h1>
+          <p className="text-gray-500 text-sm">
+            Gestión de Clientes<br/><br/>
+            Complete los detalles a continuación para generar un entorno interactivo y enviarlo directamente a su cliente.
+          </p>
         </div>
 
-        <form onSubmit={handleCrearVisita} className="bg-white p-6 md:p-10 rounded-3xl shadow-lg border border-[#e2e3e1] flex flex-col gap-8 relative border-l-4 border-l-[#1A3651]">
+        {/* Tarjeta Principal del Formulario */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 border-l-8 border-l-[#00213b] p-6 sm:p-8">
           
-          {/* SECCIÓN: CLIENTE */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-              <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">Nombre del Cliente</label>
-              <div className="flex items-center gap-3 text-[#1A3651]">
-                <span className="material-symbols-outlined text-[#73777e]">person</span>
-                <input 
-                  type="text" 
-                  value={nombreCliente} 
-                  onChange={(e) => setNombreCliente(e.target.value)} 
-                  placeholder="Ej. Arquitecto Carlos Mendoza" 
-                  className="w-full bg-transparent outline-none font-medium placeholder:text-[#c3c6ce]" 
-                  required 
-                />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            {/* Campo: Nombre Cliente */}
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre del Cliente</label>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-gray-400">person</span>
+                <input type="text" placeholder="Ej. Arquitecto Carlos Mendoza" className="bg-transparent w-full text-sm outline-none text-gray-700" />
               </div>
             </div>
-            
-            <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-              <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">WhatsApp del Cliente</label>
-              <div className="flex items-center gap-3 text-[#1A3651]">
-                <span className="material-symbols-outlined text-[#25D366]">chat</span>
-                <input 
-                  type="tel" 
-                  value={whatsappCliente} 
-                  onChange={(e) => setWhatsappCliente(e.target.value)} 
-                  placeholder="+52 55 1234 5678" 
-                  className="w-full bg-transparent outline-none font-medium placeholder:text-[#c3c6ce]" 
-                  required 
-                />
+
+            {/* Campo: WhatsApp Cliente (Con nuevo Icono) */}
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">WhatsApp del Cliente</label>
+              <div className="flex items-center gap-3">
+                {iconoWhatsApp}
+                <input type="tel" placeholder="+52 55 1234 5678" className="bg-transparent w-full text-sm outline-none text-gray-700" />
               </div>
             </div>
           </div>
 
-          {/* SECCIÓN: PROPIEDAD Y MAPA */}
-          <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-            <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">Ubicación de la Propiedad</label>
+          {/* Campo: Ubicación */}
+          <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Ubicación de la Propiedad</label>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#1A3651] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                <span className="material-symbols-outlined text-white text-[20px]">location_on</span>
+              <div className="bg-[#00213b] p-2 rounded-full text-white flex-shrink-0">
+                <span className="material-symbols-outlined text-sm">location_on</span>
               </div>
-              <input 
-                type="text" 
-                value={ubicacionPropiedad} 
-                onChange={(e) => setUbicacionPropiedad(e.target.value)} 
-                placeholder="Buscar propiedad o ingresar dirección..." 
-                className="w-full bg-transparent outline-none font-medium text-[#1A3651] placeholder:text-[#c3c6ce]" 
-                required 
-              />
+              <input type="text" placeholder="Buscar propiedad o ingresar dirección..." className="bg-transparent w-full text-sm outline-none text-gray-700" />
             </div>
           </div>
 
-          <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-            <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">URL de la Propiedad (Catálogo) / Link de Maps</label>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 text-[#1A3651]">
-                <span className="material-symbols-outlined text-[#73777e]">link</span>
-                <input 
-                  type="url" 
-                  value={urlPropiedad} 
-                  onChange={(e) => setUrlPropiedad(e.target.value)} 
-                  placeholder="Enlace de la ficha técnica..." 
-                  className="w-full bg-transparent outline-none font-medium placeholder:text-[#c3c6ce]" 
-                  required 
-                />
+          {/* Campo: URLs */}
+          <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6 space-y-4">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">URL de la Propiedad (Catálogo) / Link de Maps</label>
+            <div className="flex items-center gap-3 border-b border-gray-200 pb-2">
+              <span className="material-symbols-outlined text-gray-400 text-lg">link</span>
+              <input type="url" placeholder="Enlace de la ficha técnica..." className="bg-transparent w-full text-sm outline-none text-gray-700" />
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <span className="material-symbols-outlined text-gray-400 text-lg">map</span>
+              <input type="url" placeholder="Pegue el link de 'Compartir' desde Google Maps..." className="bg-transparent w-full text-sm outline-none text-gray-700" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 border-b border-gray-100 pb-8">
+            {/* Campo: Fecha */}
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha de Visita</label>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-gray-400">calendar_today</span>
+                <input type="date" className="bg-transparent w-full text-sm outline-none text-gray-700" />
               </div>
-              <div className="h-px w-full bg-[#e2e3e1]"></div>
-              <div className="flex items-center gap-3 text-[#1A3651]">
-                <span className="material-symbols-outlined text-[#73777e]">map</span>
-                <input 
-                  type="url" 
-                  value={urlGoogleMaps} 
-                  onChange={(e) => setUrlGoogleMaps(e.target.value)} 
-                  placeholder="Pegue el link de 'Compartir' desde Google Maps..." 
-                  className="w-full bg-transparent outline-none font-medium placeholder:text-[#c3c6ce]" 
-                  required 
-                />
+            </div>
+
+            {/* Campo: Hora */}
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Hora</label>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-gray-400">schedule</span>
+                <input type="time" className="bg-transparent w-full text-sm outline-none text-gray-700" />
               </div>
             </div>
           </div>
 
-          {/* SECCIÓN: FECHA Y HORA */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-              <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">Fecha de Visita</label>
-              <div className="flex items-center gap-3 text-[#1A3651]">
-                <span className="material-symbols-outlined text-[#73777e]">calendar_today</span>
-                <input 
-                  type="date" 
-                  value={fechaVisita} 
-                  onChange={(e) => setFechaVisita(e.target.value)} 
-                  className="w-full bg-transparent outline-none font-medium" 
-                  required 
-                />
-              </div>
-            </div>
-            
-            <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-              <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">Hora</label>
-              <div className="flex items-center gap-3 text-[#1A3651]">
-                <span className="material-symbols-outlined text-[#73777e]">schedule</span>
-                <input 
-                  type="time" 
-                  value={horaVisita} 
-                  onChange={(e) => setHoraVisita(e.target.value)} 
-                  className="w-full bg-transparent outline-none font-medium" 
-                  required 
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* SECCIÓN: DATOS DEL ASESOR */}
-          <div className="mt-4">
-            <span className="text-[#C5A059] font-headline font-bold tracking-widest uppercase text-xs mb-4 block">Datos del Asesor</span>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-                <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">Nombre del Asesor</label>
-                <div className="flex items-center gap-3 text-[#1A3651]">
-                  <span className="material-symbols-outlined text-[#73777e]">badge</span>
-                  <input 
-                    type="text" 
-                    value={nombreAsesor} 
-                    onChange={(e) => setNombreAsesor(e.target.value)} 
-                    placeholder="Ej. Juan Pérez" 
-                    className="w-full bg-transparent outline-none font-medium placeholder:text-[#c3c6ce]" 
-                    required 
-                  />
+          {/* Datos del Asesor */}
+          <div className="mb-8">
+            <label className="block text-xs font-bold text-[#C5A059] uppercase tracking-wider mb-4">Datos del Asesor</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre del Asesor</label>
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-gray-400">badge</span>
+                  <input type="text" placeholder="Ej. Juan Pérez" className="bg-transparent w-full text-sm outline-none text-gray-700" />
                 </div>
               </div>
-              
-              <div className="bg-[#f4f4f2] p-4 rounded-2xl border border-[#e2e3e1]">
-                <label className="block text-[10px] font-extrabold text-[#73777e] uppercase tracking-widest mb-3">WhatsApp del Asesor</label>
-                <div className="flex items-center gap-3 text-[#1A3651]">
-                  <span className="material-symbols-outlined text-[#25D366]">chat</span>
-                  <input 
-                    type="tel" 
-                    value={whatsappAsesor} 
-                    onChange={(e) => setWhatsappAsesor(e.target.value)} 
-                    placeholder="Ej. +52 123 456 7890" 
-                    className="w-full bg-transparent outline-none font-medium placeholder:text-[#c3c6ce]" 
-                    required 
-                  />
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">WhatsApp del Asesor</label>
+                <div className="flex items-center gap-3">
+                  {iconoWhatsApp}
+                  <input type="tel" placeholder="Ej. +52 123 456 7890" className="bg-transparent w-full text-sm outline-none text-gray-700" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* BOTÓN DE ENVIAR */}
-          <div className="flex justify-end mt-4">
-            <button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="w-full md:w-auto bg-[#C5A059] hover:bg-[#b08d4a] text-white font-headline font-bold px-10 py-4 rounded-xl transition-all shadow-lg active:scale-95 flex justify-center items-center gap-3 disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <span className="material-symbols-outlined animate-spin">refresh</span>
-              ) : (
-                <>
-                  <span>Crear Entorno y Continuar</span>
-                  <span className="material-symbols-outlined text-[20px]">send</span>
-                </>
-              )}
-            </button>
-          </div>
-
-        </form>
+          {/* NUEVO BOTÓN WHATSAPP */}
+          <button 
+            onClick={enviarInvitacion}
+            className="w-full sm:w-auto float-right bg-[#25D366] hover:bg-[#1DA851] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 group"
+          >
+            {/* Usamos el mismo icono pero en blanco */}
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-white group-hover:scale-110 transition-transform">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+            </svg>
+            Enviar Invitación
+          </button>
+          
+          <div className="clear-both"></div>
+        </div>
       </main>
     </div>
   );
