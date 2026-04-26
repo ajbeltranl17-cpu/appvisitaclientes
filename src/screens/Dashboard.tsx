@@ -4,98 +4,89 @@ import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  // Extraemos el ID de la visita de la URL para mandarlo a las demás pantallas
   const { idVisita } = useParams();
 
-  // VARIABLES RESERVADAS PARA FIREBASE (Fase 3)
+  // Datos de contexto para la propiedad en Veracruz
   const nombreCliente = "Cliente"; 
-  const urlGoogleMaps = "https://maps.google.com"; 
-
-  // Menú completo y en orden con todos los botones solicitados
-  const menuItems = [
-    { id: 'iniciar', title: 'Iniciar Visita', icon: 'directions_walk', color: 'bg-blue-600', route: `/iniciar-visita/${idVisita}` },
-    { id: 'analisis', title: 'Análisis de la Zona', icon: 'map', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
-    { id: 'galeria', title: 'Galería de Visita', icon: 'photo_library', color: 'bg-purple-600', route: `/galeria/${idVisita}` },
-    { id: 'amueblar', title: 'Amuebla con IA', icon: 'chair', color: 'bg-orange-500', route: `/amueblar/${idVisita}` },
-    { id: 'swipe', title: 'Swipe en Pareja', icon: 'swipe', color: 'bg-pink-500', route: `/swipe/${idVisita}` },
-    { id: 'catalogo', title: 'Catálogo Propiedades', icon: 'account_balance', color: 'bg-slate-700', route: `/catalogo/${idVisita}` },
-    { id: 'matriz', title: 'Matriz Comparativa', icon: 'grid_view', color: 'bg-amber-600', route: `/matriz/${idVisita}` },
-    { id: 'hipoteca', title: 'Calculadora Hipotecaria', icon: 'calculate', color: 'bg-emerald-600', route: `/calculadora/${idVisita}` },
-    { id: 'plusvalia', title: 'Calculadora Plusvalía', icon: 'trending_up', color: 'bg-indigo-600', route: `/plusvalia/${idVisita}` },
-  ];
+  const nombrePropiedad = "Jardines del Virginia";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* Navegación superior corporativa */}
       <EncabezadoGlobal 
         rutaSiguiente={`/iniciar-visita/${idVisita}`} 
         iconoSiguiente="directions_walk" 
         textoSiguiente="Iniciar Visita" 
       />
 
-      <main className="p-4 space-y-6">
+      <main className="p-4 space-y-6 max-w-md mx-auto w-full">
         
-        {/* 1. Bienvenida al Cliente con espacio para Logo */}
-        <div className="bg-[#00213b] rounded-2xl p-6 text-white shadow-lg flex items-center gap-4">
-          <div className="bg-white p-2 rounded-full flex-shrink-0 shadow-inner">
-            <img 
-              src="/logo.png" 
-              alt="Logo Inmobiliaria" 
-              className="w-12 h-12 object-contain"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
+        {/* Card de Bienvenida Personalizada */}
+        <div className="bg-[#00213b] rounded-3xl p-6 text-white shadow-lg flex items-center gap-4">
+          <div className="bg-white p-2 rounded-2xl flex-shrink-0">
+            <img src="/logo.png" alt="Tu Conexión Inmobiliaria" className="w-10 h-10 object-contain" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">¡Hola, {nombreCliente}!</h2>
-            <p className="opacity-80 text-sm mt-1">Bienvenido a tu experiencia inmersiva</p>
+            <h2 className="text-xl font-bold text-white leading-tight">¡Hola, {nombreCliente}!</h2>
+            <p className="opacity-70 text-[10px] uppercase tracking-widest font-bold">{nombrePropiedad}</p>
           </div>
         </div>
 
-        {/* 2. Mapa Superior con Botón de Google Maps */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-gray-800 uppercase text-xs tracking-widest">Ubicación a Visitar</h3>
+        {/* Sección de Mapa y Ubicación Estratégica */}
+        <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-3 px-1">
+            <h3 className="font-bold text-[#00213b] text-[10px] uppercase tracking-widest">Ubicación y Entorno</h3>
+            <span className="text-[#C5A059] text-[9px] font-black uppercase tracking-tighter">Boca del Río, Ver.</span>
           </div>
-          <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative mb-4 shadow-inner">
+          
+          <div className="aspect-video bg-gray-200 rounded-2xl overflow-hidden mb-4 shadow-inner border border-gray-50">
             <img 
-             {/* Buscas la parte del mapa y asegúrate que la imagen quede así: */}
-<img 
-  src="/mapaveracruz.jpg"
-  alt="Mapa de la zona" 
-  className="w-full h-full object-cover"
-  onError={(e) => {
-    console.log("Error cargando mapa");
-    e.currentTarget.src = "https://via.placeholder.com/400x300?text=Error+en+Nombre+Archivo";
-  }}
-/>
+              src="/map.jpg" 
+              alt="Mapa de la zona" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = "https://via.placeholder.com/400x225?text=Cargando+Entorno...";
+              }}
+            />
+          </div>
+
           <a 
-            href={urlGoogleMaps} 
+            href="https://maps.google.com" 
             target="_blank" 
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-2 bg-[#C5A059] hover:bg-yellow-600 text-white py-3 rounded-xl font-bold transition-colors shadow-md"
+            rel="noreferrer"
+            className="w-full flex items-center justify-center gap-2 bg-[#C5A059] text-white py-4 rounded-2xl font-bold text-sm shadow-md active:scale-95 transition-all"
           >
-            <span className="material-symbols-outlined">location_on</span>
-            Abrir en Google Maps
+            <span className="material-symbols-outlined text-lg">near_me</span>
+            VER RUTA EN GOOGLE MAPS
           </a>
         </div>
 
-        {/* 3. Menú de Cuadrícula con Todos los Botones Activos */}
+        {/* Módulos de Herramientas de Decisión */}
         <div className="grid grid-cols-2 gap-4">
-          {menuItems.map((item) => (
+          {[
+            { id: 'iniciar', title: 'Iniciar Visita', icon: 'directions_walk', color: 'bg-blue-600', route: `/iniciar-visita/${idVisita}` },
+            { id: 'analisis', title: 'La Zona', icon: 'explore', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
+            { id: 'plusvalia', title: 'Plusvalía', icon: 'trending_up', color: 'bg-indigo-600', route: `/plusvalia/${idVisita}` },
+            { id: 'hipoteca', title: 'Hipoteca', icon: 'payments', color: 'bg-emerald-600', route: `/calculadora/${idVisita}` },
+          ].map((item) => (
             <button
               key={item.id}
               onClick={() => navigate(item.route)}
-              className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group"
+              className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-[#C5A059]/30"
             >
-              <div className={`${item.color} p-3 rounded-xl text-white mb-3 group-hover:scale-110 transition-transform`}>
+              <div className={`${item.color} p-3 rounded-2xl text-white shadow-sm`}>
                 <span className="material-symbols-outlined text-2xl">{item.icon}</span>
               </div>
-              <span className="text-[11px] font-bold text-gray-700 text-center uppercase tracking-tighter">
-                {item.title}
-              </span>
+              <span className="text-[9px] font-black text-gray-700 uppercase tracking-tighter">{item.title}</span>
             </button>
           ))}
         </div>
 
+        <footer className="pt-2 text-center">
+          <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-medium">
+            Exclusivo para tu visita en Veracruz
+          </p>
+        </footer>
       </main>
     </div>
   );
