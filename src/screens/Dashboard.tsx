@@ -59,9 +59,13 @@ export const Dashboard = () => {
             <img 
              {/* Buscas la parte del mapa y asegúrate que la imagen quede así: */}
 <img 
-  src="/mapa-zona.jpg" 
+  src="/mapa-zona.jpg?v=1" 
   alt="Mapa de la zona" 
   className="w-full h-full object-cover"
+  onError={(e) => {
+    console.log("Error cargando mapa");
+    e.currentTarget.src = "https://via.placeholder.com/400x300?text=Error+en+Nombre+Archivo";
+  }}
 />
           <a 
             href={urlGoogleMaps} 
