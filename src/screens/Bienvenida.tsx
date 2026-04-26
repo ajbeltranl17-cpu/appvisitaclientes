@@ -19,15 +19,14 @@ export const Bienvenida = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* 1. Encabezado Corporativo Unificado */}
       <EncabezadoGlobal />
 
       <main className="flex-1 flex flex-col items-center p-6 relative">
         
-        {/* 2. Imagen Hero Elegante (Minimal Luxury Living) */}
+        {/* Imagen Hero Local (Ya no fallará) */}
         <div className="w-full max-w-sm aspect-[16/10] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-8 mt-2 relative">
           <img 
-            src="https://images.unsplash.com/photo-1600607687937-69528891f522?q=80&w=800&auto=format&fit=crop" 
+            src="/fondo-bienvenida.jpg" 
             alt="Interior Lujoso" 
             className="w-full h-full object-cover"
           />
@@ -39,7 +38,7 @@ export const Bienvenida = () => {
           </div>
         </div>
 
-        {/* 3. Textos de Bienvenida y Gancho */}
+        {/* Textos de Bienvenida y Gancho */}
         <div className="text-center space-y-3 max-w-sm mb-10">
           <span className="text-[#C5A059] font-bold uppercase text-[11px] tracking-[0.3em]">
             Experiencia Inmersiva
@@ -55,7 +54,7 @@ export const Bienvenida = () => {
           </p>
         </div>
 
-        {/* 4. Lista de Beneficios Unificada (con estilo elegante) */}
+        {/* Lista de Beneficios */}
         <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-sm border border-gray-100 mb-10">
           <h3 className="font-extrabold text-[#00213b] text-sm uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
             ¿Qué encontrarás adentro?
@@ -72,7 +71,7 @@ export const Bienvenida = () => {
           </ul>
         </div>
 
-        {/* 5. Botón de Acción Principal (El Gancho) */}
+        {/* Botón de Acción Principal */}
         <button 
           onClick={() => navigate(`/dashboard/${idVisita}`)}
           className="w-full max-w-xs bg-[#00213b] text-white py-5 rounded-2xl font-bold text-lg shadow-2xl hover:bg-[#00335c] transition-all active:scale-95 flex items-center justify-center gap-3 mb-6"
