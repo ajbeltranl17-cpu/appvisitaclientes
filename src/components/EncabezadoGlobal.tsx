@@ -1,6 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+interface Props {
+  rutaAnterior?: string;
+  iconoAnterior?: string;
+  textoAnterior?: string;
+  rutaSiguiente?: string;
+  iconoSiguiente?: string;
+  textoSiguiente?: string;
+}
+
 export const EncabezadoGlobal = ({ 
   rutaAnterior, 
   iconoAnterior, 
@@ -8,7 +17,7 @@ export const EncabezadoGlobal = ({
   rutaSiguiente,
   iconoSiguiente,
   textoSiguiente
-}) => {
+}: Props) => {
   const navigate = useNavigate();
 
   return (
@@ -20,21 +29,22 @@ export const EncabezadoGlobal = ({
           <span className="text-3xl material-symbols-outlined">menu</span>
         </button>
 
-        {/* Logo y Nombre Centro */}
+        {/* Logo Centro */}
         <div className="flex flex-col items-center justify-center">
-          <span className="text-[#00213b] material-symbols-outlined text-3xl mb-1">apartment</span>
-          <h1 className="text-sm font-black tracking-widest text-center text-[#00213b] uppercase leading-tight">
-            Tu Conexión<br/>Inmobiliaria
-          </h1>
+          <img 
+            src="/logo.png" 
+            alt="Tu Conexión Inmobiliaria" 
+            className="h-14 object-contain"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
         </div>
 
-        {/* Espaciador invisible derecha para centrar perfectamente */}
+        {/* Espaciador invisible para centrar */}
         <div className="w-10"></div>
       </div>
 
       {/* 2. Sub-encabezado Fijo (Navegación Dorada) */}
       <div className="flex items-center justify-between px-4 py-2 border-t border-gray-100 bg-gray-50">
-        {/* Botón Izquierdo (Regresar) */}
         {rutaAnterior ? (
           <button 
             onClick={() => navigate(rutaAnterior)}
@@ -46,7 +56,6 @@ export const EncabezadoGlobal = ({
           </button>
         ) : <div />}
 
-        {/* Botón Derecho (Siguiente) */}
         {rutaSiguiente ? (
           <button 
             onClick={() => navigate(rutaSiguiente)}
