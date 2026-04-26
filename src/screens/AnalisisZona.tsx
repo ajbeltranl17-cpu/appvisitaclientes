@@ -6,7 +6,8 @@ export const AnalisisZona = () => {
   const navigate = useNavigate();
   const { idVisita } = useParams();
 
-  // Datos reales de la zona de Jardines del Virginia / Boca del Río
+  // En la Fase de Backend, estos datos se generarán dinámicamente
+  // con IA a partir de la URL de Google Maps ingresada en "Agendar Visita".
   const puntosInteres = [
     { 
       categoria: 'Educación', 
@@ -32,7 +33,6 @@ export const AnalisisZona = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Encabezado con navegación lógica */}
       <EncabezadoGlobal 
         rutaAnterior={`/dashboard/${idVisita}`}
         textoAnterior="Dashboard"
@@ -40,7 +40,7 @@ export const AnalisisZona = () => {
         textoSiguiente="Galería"
       />
 
-      <main className="p-4 space-y-6 max-w-md mx-auto w-full">
+      <main className="p-4 space-y-6 max-w-md mx-auto w-full pb-8">
         
         {/* Título de Sección */}
         <section className="px-2">
@@ -49,7 +49,7 @@ export const AnalisisZona = () => {
           <p className="text-gray-500 text-sm mt-2">Explora los servicios y puntos clave que rodean tu próxima inversión en Boca del Río.</p>
         </section>
 
-        {/* Mapa en Grande (Usando tu archivo map.jpg) */}
+        {/* Mapa en Grande */}
         <div className="w-full aspect-video bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 relative">
           <img 
             src="/map.jpg" 
@@ -57,7 +57,7 @@ export const AnalisisZona = () => {
             className="w-full h-full object-cover"
           />
           <div className="absolute bottom-3 left-3">
-            <span className="bg-[#00213b]/90 text-white text-[9px] font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">
+            <span className="bg-[#00213b]/90 text-white text-[9px] font-bold px-3 py-1.5 rounded-full backdrop-blur-sm shadow-sm">
               UBICACIÓN ESTRATÉGICA
             </span>
           </div>
@@ -75,26 +75,14 @@ export const AnalisisZona = () => {
                 <ul className="space-y-1">
                   {cat.items.map((item, i) => (
                     <li key={i} className="text-gray-500 text-xs flex items-center gap-2">
-                      <div className="w-1 h-1 bg-[#C5A059] rounded-full"></div>
-                      {item}
+                      <div className="w-1.5 h-1.5 bg-[#C5A059] rounded-full flex-shrink-0"></div>
+                      <span className="leading-tight">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
           ))}
-        </div>
-
-        {/* CTA Final */}
-        <div className="bg-[#00213b] rounded-3xl p-6 text-center text-white shadow-xl mt-4">
-          <h4 className="font-bold text-lg mb-1">¿Te gustaría conocer más?</h4>
-          <p className="text-[11px] opacity-70 mb-4">Podemos agendar un recorrido por los puntos clave de la zona durante tu visita.</p>
-          <button 
-            onClick={() => navigate(`/iniciar-visita/${idVisita}`)}
-            className="w-full bg-[#C5A059] text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest active:scale-95 transition-transform"
-          >
-            Comenzar Recorrido
-          </button>
         </div>
 
       </main>
