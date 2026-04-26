@@ -8,6 +8,7 @@ import { AgendarVisita } from './screens/AgendarVisita'; // Formulario de captur
 import { AdminAsesores } from './screens/AdminAsesores'; // Panel que acabamos de crear
 
 // 2. Importaciones del Flujo del Cliente
+import { Bienvenida } from './screens/Bienvenida';
 import { Dashboard } from './screens/Dashboard';
 import { IniciarVisita } from './screens/IniciarVisita';
 import { AnalisisZona } from './screens/AnalisisZona';
@@ -40,6 +41,7 @@ export default function App() {
         {/* =========================================
             RUTAS DEL CLIENTE (REQUIEREN ID DE VISITA) 
            ========================================= */}
+           <Route path="/bienvenida/:idVisita" element={<Bienvenida />} />
         <Route path="/dashboard/:idVisita" element={<Dashboard />} />
         <Route path="/iniciar-visita/:idVisita" element={<IniciarVisita />} />
         <Route path="/analisis/:idVisita" element={<AnalisisZona />} />
