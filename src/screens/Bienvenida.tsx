@@ -19,26 +19,21 @@ export const Bienvenida = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* 1. Encabezado Corporativo Único (Arriba) */}
       <EncabezadoGlobal />
 
       <main className="flex-1 flex flex-col items-center p-6 relative">
         
-        {/* Imagen Hero Local (Ya no fallará) */}
-        <div className="w-full max-w-sm aspect-[16/10] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-8 mt-2 relative">
+        {/* 2. Tarjeta con Imagen Hero (Limpia y en grande) */}
+        <div className="w-full max-w-sm aspect-[16/10] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-8 mt-2">
           <img 
             src="/fondo-bienvenida.jpg" 
             alt="Interior Lujoso" 
             className="w-full h-full object-cover"
           />
-          {/* Overlay sutil para el logo */}
-          <div className="absolute inset-0 bg-black/5 flex items-center justify-center p-8">
-            <div className="bg-white/90 p-4 rounded-full shadow-inner border border-white/50">
-              <img src="/logo.png" alt="Logo" className="w-16 h-16 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-            </div>
-          </div>
         </div>
 
-        {/* Textos de Bienvenida y Gancho */}
+        {/* 3. Textos de Bienvenida */}
         <div className="text-center space-y-3 max-w-sm mb-10">
           <span className="text-[#C5A059] font-bold uppercase text-[11px] tracking-[0.3em]">
             Experiencia Inmersiva
@@ -54,7 +49,7 @@ export const Bienvenida = () => {
           </p>
         </div>
 
-        {/* Lista de Beneficios */}
+        {/* 4. Lista de Beneficios */}
         <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-sm border border-gray-100 mb-10">
           <h3 className="font-extrabold text-[#00213b] text-sm uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
             ¿Qué encontrarás adentro?
@@ -71,7 +66,7 @@ export const Bienvenida = () => {
           </ul>
         </div>
 
-        {/* Botón de Acción Principal */}
+        {/* 5. Botón de Acción Principal */}
         <button 
           onClick={() => navigate(`/dashboard/${idVisita}`)}
           className="w-full max-w-xs bg-[#00213b] text-white py-5 rounded-2xl font-bold text-lg shadow-2xl hover:bg-[#00335c] transition-all active:scale-95 flex items-center justify-center gap-3 mb-6"
