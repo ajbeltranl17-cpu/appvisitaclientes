@@ -15,7 +15,7 @@ import { AnalisisZona } from './screens/AnalisisZona';
 import { CalculadoraHipotecaria } from './screens/CalculadoraHipotecaria';
 import { CalculadoraPlusvalia } from './screens/CalculadoraPlusvalia';
 import { GaleriaVisita } from './screens/GaleriaVisita';
-import { AmueblarIA } from './screens/AmueblarIA';
+import { DisenoIA } from './screens/DisenoIA';
 import { SwipePareja } from './screens/SwipePareja';
 import { MisDeseos } from './screens/MisDeseos';
 import { CatalogoPropiedades } from './screens/CatalogoPropiedades';
@@ -48,7 +48,7 @@ export default function App() {
         <Route path="/calculadora/:idVisita" element={<CalculadoraHipotecaria />} />
         <Route path="/plusvalia/:idVisita" element={<CalculadoraPlusvalia />} />
         <Route path="/galeria/:idVisita" element={<GaleriaVisita />} />
-        <Route path="/amueblar/:idVisita" element={<AmueblarIA />} />
+      <Route path="/diseno-ia/:idVisita" element={<DisenoIA />} />
         <Route path="/swipe/:idVisita" element={<SwipePareja />} />
         <Route path="/deseos/:idVisita" element={<MisDeseos />} />
         <Route path="/catalogo/:idVisita" element={<CatalogoPropiedades />} />
