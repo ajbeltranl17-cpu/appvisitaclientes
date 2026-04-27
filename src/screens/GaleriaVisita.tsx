@@ -23,8 +23,8 @@ export const GaleriaVisita = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <EncabezadoGlobal 
-        rutaAnterior={`/analisis/${idVisita}`}
-        textoAnterior="Entorno"
+        rutaAnterior={`/plusvalia/${idVisita}`}
+        textoAnterior="Plusvalía"
         rutaSiguiente={`/diseno-ia/${idVisita}`}
         textoSiguiente="Diseño IA"
       />
