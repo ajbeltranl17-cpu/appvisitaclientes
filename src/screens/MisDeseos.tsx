@@ -33,8 +33,7 @@ export const MisDeseos = () => {
 
   // FUNCIÓN PARA COMPARTIR POR WHATSAPP
   const compartirPorWhatsApp = () => {
-    // En la fase de Backend, este número se tomará de la base de datos del asesor.
-    const numeroAsesor = "5212290000000"; 
+    const numeroAsesor = ""; 
     
     const mensaje = `¡Hola! He definido mis deseos para mi próxima propiedad:\n\n` +
       `📍 *Ubicación:* ${ubicacion}\n` +
@@ -47,7 +46,11 @@ export const MisDeseos = () => {
       `✅ *Amenidades:* ${amenidadesSeleccionadas.join(', ')}\n\n` +
       `¿Podrías ayudarme a encontrar opciones que coincidan?`;
 
-    window.open(`https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    const url = numeroAsesor 
+      ? `https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}` 
+      : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+      
+    window.open(url, '_blank');
   };
 
   const Contador = ({ label, icon, valor, setValor }: { label: string, icon: string, valor: number, setValor: (v: number) => void }) => (
