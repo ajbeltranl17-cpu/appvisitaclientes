@@ -67,7 +67,7 @@ export const Dashboard = () => {
             { title: 'Iniciar Visita', icon: 'directions_walk', color: 'bg-blue-600', route: `/iniciar-visita/${idVisita}` },
             { title: 'La Zona', icon: 'explore', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
             { title: 'Galería', icon: 'photo_library', color: 'bg-purple-600', route: `/galeria/${idVisita}` },
-            { title: 'Amueblar IA', icon: 'chair', color: 'bg-orange-500', route: `/amueblar/${idVisita}` },
+            { title: 'Diseño IA', icon: 'auto_awesome', color: 'bg-orange-500', route: `/diseno-ia/${idVisita}` },
             { title: 'Swipe Pareja', icon: 'swipe', color: 'bg-pink-500', route: `/swipe/${idVisita}` },
             { title: 'Mis Deseos', icon: 'favorite', color: 'bg-red-500', route: `/deseos/${idVisita}` },
             { title: 'Catálogo', icon: 'account_balance', color: 'bg-slate-700', route: `/catalogo/${idVisita}` },
