@@ -48,10 +48,16 @@ export const MatrizComparativa = () => {
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 
   const contactarAsesor = (prop: any) => {
-    // En la Fase Backend, este número se extrae del perfil del asesor.
-    const numeroAsesor = "5212290000000"; 
+    // Si lo dejamos vacío (""), WhatsApp te preguntará a quién enviarlo para que puedas probar el texto.
+    // Si quieres que te llegue a ti, pon tu número así: "522291234567"
+    const numeroAsesor = ""; 
     const mensaje = `¡Hola! Estuve analizando la Matriz Comparativa y me interesa agendar una visita para: *${prop.titulo}*.`;
-    window.open(`https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    
+    const url = numeroAsesor 
+      ? `https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}` 
+      : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+      
+    window.open(url, '_blank');
   };
 
   return (
