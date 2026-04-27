@@ -27,7 +27,7 @@ export const Bienvenida = () => {
 
       <main className="flex-1 flex flex-col items-center p-6 relative pb-24">
 
-        {/* Tarjeta con Imagen Hero - CORREGIDA */}
+        {/* Tarjeta con Imagen Hero */}
         <div className="w-full max-w-sm aspect-[16/10] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-8">
           <img 
             src={imagenPropiedadExtraida} 
@@ -68,15 +68,15 @@ export const Bienvenida = () => {
         </div>
       </main>
 
-      {/* Botón Fijo Abajo */}
+      {/* Botón Fijo Abajo (ACTUALIZADO) */}
       <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent">
         <div className="max-w-sm mx-auto">
           <button 
             onClick={() => navigate(`/dashboard/${idVisita}`)}
             className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95"
           >
-            Comenzar mi experiencia
-            <span className="material-symbols-outlined">arrow_forward</span>
+            Ver Ubicación Exacta
+            <span className="material-symbols-outlined">location_on</span>
           </button>
         </div>
       </div>
