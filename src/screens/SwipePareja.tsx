@@ -42,8 +42,8 @@ export const SwipePareja = () => {
       <EncabezadoGlobal 
         rutaAnterior={`/diseno-ia/${idVisita}`}
         textoAnterior="Diseño IA"
-        rutaSiguiente={`/catalogo/${idVisita}`}
-        textoSiguiente="Catálogo"
+        rutaSiguiente={`/mis-deseos/${idVisita}`}
+        textoSiguiente="Mis Deseos"
       />
 
       <main className="flex-1 flex flex-col p-4 max-w-md mx-auto w-full relative">
@@ -116,8 +116,16 @@ export const SwipePareja = () => {
                 </div>
               )}
 
-              <div className="space-y-3 mt-auto">
-                {/* BOTÓN DE WHATSAPP */}
+             <div className="space-y-3 mt-auto">
+                {/* 1. NUEVO BOTÓN: Avanzar a Mis Deseos */}
+                <button 
+                  onClick={() => navigate(`/mis-deseos/${idVisita}`)}
+                  className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-transform"
+                >
+                  Continuar a Mis Deseos
+                </button>
+
+                {/* 2. BOTÓN DE WHATSAPP (Intacto) */}
                 <button 
                   onClick={compartirWhatsApp}
                   className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
@@ -128,6 +136,7 @@ export const SwipePareja = () => {
                   Compartir Resultados
                 </button>
                 
+                {/* 3. BOTÓN DE REINICIAR (Intacto) */}
                 <button 
                   onClick={reinciar}
                   className="w-full bg-white text-[#00213b] border border-gray-200 py-4 rounded-2xl font-bold active:bg-gray-50 transition-colors"
@@ -135,11 +144,3 @@ export const SwipePareja = () => {
                   Volver a jugar
                 </button>
               </div>
-            </div>
-          )}
-        </div>
-
-      </main>
-    </div>
-  );
-};
