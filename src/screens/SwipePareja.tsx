@@ -9,7 +9,7 @@ export const SwipePareja = () => {
   const [indiceActual, setIndiceActual] = useState(0);
   const [matches, setMatches] = useState<string[]>([]);
 
-  // Ahora usamos imágenes locales para garantizar que siempre carguen
+  // Usamos imágenes locales
   const tarjetas = [
     { id: '1', titulo: 'Cocina con Barra', img: '/swipe-1.jpg', desc: 'Ideal para desayunos rápidos o recibir visitas.' },
     { id: '2', titulo: 'Terraza Privada', img: '/swipe-2.jpg', desc: 'Espacio al aire libre con vista a la ciudad.' },
@@ -29,7 +29,6 @@ export const SwipePareja = () => {
     setMatches([]);
   };
 
-  // Función para enviar a WhatsApp
   const compartirWhatsApp = () => {
     const texto = `¡Hola! Acabamos de hacer Match en ${matches.length} características para nuestro próximo departamento en Jardines del Virginia.\n\nNuestras prioridades conjuntas son:\n${matches.map(m => `✅ ${m}`).join('\n')}\n\n¡Creo que esta es la opción ideal!`;
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
@@ -39,6 +38,7 @@ export const SwipePareja = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-hidden">
+      {/* Encabezado ajustado hacia Mis Deseos */}
       <EncabezadoGlobal 
         rutaAnterior={`/diseno-ia/${idVisita}`}
         textoAnterior="Diseño IA"
@@ -57,10 +57,8 @@ export const SwipePareja = () => {
         <div className="flex-1 relative flex items-center justify-center min-h-[420px]">
           
           {!mostrarResultados ? (
-            // TARJETA DE SWIPE (Estructura reforzada)
             <div className="w-full h-[450px] bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col transform transition-all duration-300">
               
-              {/* Contenedor de Imagen a prueba de colapsos */}
               <div className="flex-1 relative bg-gray-200 min-h-[250px]">
                 <img 
                   src={tarjetas[indiceActual].img} 
@@ -76,7 +74,6 @@ export const SwipePareja = () => {
                 </div>
               </div>
 
-              {/* Botones */}
               <div className="h-28 bg-white flex items-center justify-center gap-8 px-6 flex-shrink-0">
                 <button 
                   onClick={() => manejarDecision(false)}
@@ -94,7 +91,6 @@ export const SwipePareja = () => {
             </div>
           ) : (
             
-            // PANTALLA DE RESULTADOS
             <div className="w-full bg-white rounded-[2.5rem] shadow-xl p-6 text-center border border-gray-100 animate-fade-in flex flex-col max-h-[500px] overflow-y-auto">
               <div className="w-16 h-16 bg-[#C5A059]/10 rounded-full flex items-center justify-center mx-auto mb-4 flex-shrink-0">
                 <span className="material-symbols-outlined text-4xl text-[#C5A059]">celebration</span>
@@ -116,8 +112,9 @@ export const SwipePareja = () => {
                 </div>
               )}
 
-             <div className="space-y-3 mt-auto">
-                {/* 1. NUEVO BOTÓN: Avanzar a Mis Deseos */}
+              {/* AQUÍ ESTÁN LOS 3 BOTONES EN ORDEN */}
+              <div className="space-y-3 mt-auto">
+                {/* Botón 1: Continuar a Mis Deseos */}
                 <button 
                   onClick={() => navigate(`/mis-deseos/${idVisita}`)}
                   className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-transform"
@@ -125,7 +122,7 @@ export const SwipePareja = () => {
                   Continuar a Mis Deseos
                 </button>
 
-                {/* 2. BOTÓN DE WHATSAPP (Intacto) */}
+                {/* Botón 2: Compartir en WhatsApp */}
                 <button 
                   onClick={compartirWhatsApp}
                   className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
@@ -136,7 +133,7 @@ export const SwipePareja = () => {
                   Compartir Resultados
                 </button>
                 
-                {/* 3. BOTÓN DE REINICIAR (Intacto) */}
+                {/* Botón 3: Reiniciar */}
                 <button 
                   onClick={reinciar}
                   className="w-full bg-white text-[#00213b] border border-gray-200 py-4 rounded-2xl font-bold active:bg-gray-50 transition-colors"
@@ -144,3 +141,11 @@ export const SwipePareja = () => {
                   Volver a jugar
                 </button>
               </div>
+
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
