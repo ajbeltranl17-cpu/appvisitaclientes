@@ -6,8 +6,6 @@ export const AnalisisZona = () => {
   const navigate = useNavigate();
   const { idVisita } = useParams();
 
-  // En la Fase de Backend, estos datos se generarán dinámicamente
-  // con IA a partir de la URL de Google Maps ingresada en "Agendar Visita".
   const puntosInteres = [
     { 
       categoria: 'Educación', 
@@ -36,20 +34,18 @@ export const AnalisisZona = () => {
       <EncabezadoGlobal 
         rutaAnterior={`/dashboard/${idVisita}`}
         textoAnterior="Dashboard"
-        rutaSiguiente={`/galeria/${idVisita}`}
-        textoSiguiente="Galería"
+        rutaSiguiente={`/calculadora/${idVisita}`}
+        textoSiguiente="Hipoteca"
       />
 
       <main className="p-4 space-y-6 max-w-md mx-auto w-full pb-8">
         
-        {/* Título de Sección */}
         <section className="px-2">
           <span className="text-[#C5A059] font-black uppercase text-[10px] tracking-[0.2em]">Entorno y Estilo de Vida</span>
           <h1 className="text-3xl font-black text-[#00213b] mt-1">Análisis de la Zona</h1>
           <p className="text-gray-500 text-sm mt-2">Explora los servicios y puntos clave que rodean tu próxima inversión en Boca del Río.</p>
         </section>
 
-        {/* Mapa en Grande */}
         <div className="w-full aspect-video bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 relative">
           <img 
             src="/map.jpg" 
@@ -63,7 +59,6 @@ export const AnalisisZona = () => {
           </div>
         </div>
 
-        {/* Tarjetas de Puntos de Interés */}
         <div className="space-y-4">
           {puntosInteres.map((cat, idx) => (
             <div key={idx} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-50 flex gap-4">
