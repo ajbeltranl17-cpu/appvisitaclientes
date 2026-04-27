@@ -7,11 +7,12 @@ export const DisenoIA = () => {
   const [estiloSeleccionado, setEstiloSeleccionado] = useState('Moderno');
   const [procesando, setProcesando] = useState(false);
 
+  // Actualizado para usar tus imágenes locales
   const estilos = [
-    { id: 'Moderno', img: 'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?q=80&w=200', desc: 'Líneas limpias y tonos neutros.' },
-    { id: 'Industrial', img: 'https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?q=80&w=200', desc: 'Materiales crudos y toques urbanos.' },
-    { id: 'Minimalista', img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=200', desc: 'Menos es más, máxima amplitud.' },
-    { id: 'Escandinavo', img: 'https://images.unsplash.com/photo-1550226844-2730ad48fc8e?q=80&w=200', desc: 'Cálido, funcional y mucha madera.' }
+    { id: 'Moderno', img: '/style-modern.jpg', desc: 'Líneas limpias y tonos neutros.' },
+    { id: 'Industrial', img: '/style-industrial.jpg', desc: 'Materiales crudos y toques urbanos.' },
+    { id: 'Minimalista', img: '/style-minimalist.jpg', desc: 'Menos es más, máxima amplitud.' },
+    { id: 'Escandinavo', img: '/style-scandi.jpg', desc: 'Cálido, funcional y mucha madera.' }
   ];
 
   const manejarGeneracion = () => {
@@ -39,14 +40,12 @@ export const DisenoIA = () => {
 
         {/* Visor de Comparación (Antes / Después) */}
         <div className="relative aspect-[4/3] bg-white rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
-          {/* Imagen de fondo (El "Antes" o el "Resultado") */}
           <img 
             src="https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=800" 
             alt="Espacio" 
             className={`w-full h-full object-cover transition-all duration-1000 ${procesando ? 'blur-xl scale-110 opacity-50' : 'blur-0 scale-100 opacity-100'}`}
           />
           
-          {/* Overlay de Carga IA */}
           {procesando && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#00213b]/20 backdrop-blur-md">
               <div className="w-16 h-16 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -69,16 +68,25 @@ export const DisenoIA = () => {
               <button
                 key={estilo.id}
                 onClick={() => setEstiloSeleccionado(estilo.id)}
-                className={`p-3 rounded-3xl border-2 transition-all text-left space-y-2 ${
+                className={`p-3 rounded-3xl border-2 transition-all text-left space-y-2 flex flex-col h-full ${
                   estiloSeleccionado === estilo.id 
                   ? 'border-[#C5A059] bg-white shadow-md' 
                   : 'border-transparent bg-gray-100 opacity-60'
                 }`}
               >
-                <img src={estilo.img} alt={estilo.id} className="w-full h-20 object-cover rounded-2xl" />
-                <div>
-                  <p className="font-bold text-[#00213b] text-xs">{estilo.id}</p>
-                  <p className="text-[9px] text-gray-500 leading-tight">{estilo.desc}</p>
+                <div className="w-full h-20 bg-gray-200 rounded-2xl overflow-hidden mb-1 flex-shrink-0">
+                  <img 
+                    src={estilo.img} 
+                    alt={estilo.id} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/150?text=Estilo";
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col flex-grow justify-start">
+                  <p className="font-bold text-[#00213b] text-xs leading-tight">{estilo.id}</p>
+                  <p className="text-[9px] text-gray-500 leading-tight mt-1">{estilo.desc}</p>
                 </div>
               </button>
             ))}
