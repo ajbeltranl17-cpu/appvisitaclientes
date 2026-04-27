@@ -31,7 +31,25 @@ export const MisDeseos = () => {
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 
-  // Componente reutilizable para los contadores (+/-)
+  // FUNCIÓN PARA COMPARTIR POR WHATSAPP
+  const compartirPorWhatsApp = () => {
+    // En la fase de Backend, este número se tomará de la base de datos del asesor.
+    const numeroAsesor = "5212290000000"; 
+    
+    const mensaje = `¡Hola! He definido mis deseos para mi próxima propiedad:\n\n` +
+      `📍 *Ubicación:* ${ubicacion}\n` +
+      `🏠 *Tipo:* ${tipoPropiedad}\n` +
+      `💰 *Presupuesto:* ${formatearMoneda(presupuesto)}\n` +
+      `🛌 *Recámaras:* ${recamaras}\n` +
+      `🚿 *Baños:* ${banos}\n` +
+      `🚗 *Estacionamientos:* ${estacionamientos}\n` +
+      `✨ *Estado:* ${antiguedad}\n` +
+      `✅ *Amenidades:* ${amenidadesSeleccionadas.join(', ')}\n\n` +
+      `¿Podrías ayudarme a encontrar opciones que coincidan?`;
+
+    window.open(`https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}`, '_blank');
+  };
+
   const Contador = ({ label, icon, valor, setValor }: { label: string, icon: string, valor: number, setValor: (v: number) => void }) => (
     <div className="flex items-center justify-between bg-gray-50 p-3 rounded-2xl border border-gray-100">
       <div className="flex items-center gap-2">
@@ -59,7 +77,7 @@ export const MisDeseos = () => {
         textoSiguiente="Catálogo"
       />
 
-      <main className="p-4 space-y-6 max-w-md mx-auto w-full pb-28">
+      <main className="p-4 space-y-6 max-w-md mx-auto w-full pb-48">
         
         <section className="px-2">
           <span className="text-[#C5A059] font-black uppercase text-[10px] tracking-[0.3em]">Perfilamiento Inteligente</span>
@@ -68,8 +86,6 @@ export const MisDeseos = () => {
         </section>
 
         <div className="space-y-5 bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
-          
-          {/* Ubicación */}
           <div className="space-y-2">
             <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest">Zona de Interés</label>
             <div className="relative">
@@ -83,7 +99,6 @@ export const MisDeseos = () => {
             </div>
           </div>
 
-          {/* Tipo de Propiedad */}
           <div className="space-y-2">
             <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block">Tipo de Propiedad</label>
             <div className="grid grid-cols-3 gap-2">
@@ -101,7 +116,6 @@ export const MisDeseos = () => {
             </div>
           </div>
 
-          {/* Presupuesto */}
           <div className="space-y-3 pt-2">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest">Presupuesto Máximo</label>
@@ -113,19 +127,15 @@ export const MisDeseos = () => {
               className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#C5A059]"
             />
           </div>
-
         </div>
 
-        {/* Distribución y Características */}
         <div className="space-y-5 bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
           <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block mb-1">Distribución Ideal</label>
-          
           <div className="space-y-3">
             <Contador label="Recámaras" icon="bed" valor={recamaras} setValor={setRecamaras} />
             <Contador label="Baños" icon="shower" valor={banos} setValor={setBanos} />
             <Contador label="Autos" icon="directions_car" valor={estacionamientos} setValor={setEstacionamientos} />
           </div>
-
           <div className="pt-4 border-t border-gray-100 space-y-3">
             <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block">Estado de la Propiedad</label>
             <div className="grid grid-cols-3 gap-2">
@@ -144,7 +154,6 @@ export const MisDeseos = () => {
           </div>
         </div>
 
-        {/* Amenidades */}
         <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
           <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block mb-4">Amenidades Imprescindibles</label>
           <div className="flex flex-wrap gap-2">
@@ -166,12 +175,25 @@ export const MisDeseos = () => {
         </div>
       </main>
 
-      {/* Botón Flotante para Filtrar Catálogo */}
-      <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent z-10">
-        <div className="max-w-md mx-auto">
+      {/* BOTONES FLOTANTES (Buscar + WhatsApp) */}
+      <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent z-10 space-y-2">
+        <div className="max-w-md mx-auto space-y-3">
+          
+          {/* Botón de WhatsApp NUEVO */}
+          <button 
+            onClick={compartirPorWhatsApp}
+            className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-lg flex justify-center items-center gap-3 active:scale-95 transition-all"
+          >
+            Compartir Mis Deseos con Mi Asesor
+            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+               <path d="M12.031 0C5.385 0 0 5.386 0 12.033c0 2.128.553 4.205 1.604 6.035L.145 24l6.113-1.605c1.764.966 3.754 1.476 5.77 1.476 6.647 0 12.034-5.386 12.034-12.034C24 5.386 18.678 0 12.031 0zm0 21.894c-1.802 0-3.565-.484-5.112-1.404l-.367-.218-3.805.998.998-3.71-.238-.38A9.873 9.873 0 0 1 2.051 12.033c0-5.513 4.487-10 10-10 5.513 0 10 4.487 10 10s-4.487 10-9.999 10zm5.485-7.493c-.302-.15-1.785-.88-2.062-.98-.278-.1-.481-.15-.683.15-.203.301-.781.98-.957 1.18-.175.201-.35.226-.652.076-1.528-.758-2.613-1.442-3.626-3.15-.176-.297-.018-.458.133-.608.135-.135.302-.352.453-.528.15-.176.202-.301.302-.502.1-.201.05-.377-.025-.527-.075-.15-.683-1.645-.935-2.253-.246-.593-.497-.512-.683-.521-.175-.009-.376-.009-.578-.009-.202 0-.528.075-.805.376-.277.301-1.056 1.031-1.056 2.513 0 1.482 1.082 2.915 1.233 3.116.15.201 2.126 3.245 5.15 4.547 2.08 .894 2.87 .974 3.938.82 1.156-.168 3.565-1.457 4.067-2.865.503-1.408.503-2.614.353-2.865-.151-.252-.553-.402-.855-.553z"/>
+            </svg>
+          </button>
+
+          {/* Botón de Buscar (Original) */}
           <button 
             onClick={() => navigate(`/catalogo/${idVisita}`)}
-            className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95"
+            className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95"
           >
             Buscar Propiedades
             <span className="material-symbols-outlined">search</span>
