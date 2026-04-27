@@ -65,9 +65,15 @@ export const CatalogoPropiedades = () => {
 
   // FUNCIÓN DE WHATSAPP PREGRABADO POR PROPIEDAD
   const contactarAsesor = (propiedad: any) => {
-    const numeroAsesor = "5212290000000"; // En Fase Backend esto viene del perfil del asesor
+    // Lo dejamos vacío para probar el mensaje pregrabado eligiendo un contacto
+    const numeroAsesor = ""; 
     const mensaje = `¡Hola! Estoy navegando por mi catálogo personalizado y me interesó mucho la propiedad: *${propiedad.titulo}* (${formatearMoneda(propiedad.precio)}). ¿Me podrías dar más detalles?`;
-    window.open(`https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    
+    const url = numeroAsesor 
+      ? `https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}` 
+      : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+      
+    window.open(url, '_blank');
   };
 
   return (
