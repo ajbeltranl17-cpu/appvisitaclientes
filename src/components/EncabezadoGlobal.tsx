@@ -14,13 +14,12 @@ export const EncabezadoGlobal = ({
   textoAnterior, 
   rutaSiguiente, 
   textoSiguiente, 
-  iconoSiguiente = 'arrow_forward' 
+  iconoSiguiente = 'arrow_forward_ios' 
 }: Props) => {
   const navigate = useNavigate();
   const { idVisita } = useParams();
   const [menuAbierto, setMenuAbierto] = useState(false);
 
-  // Lista de todas las pantallas para el menú de navegación rápida
   const menuItems = [
     { title: 'Dashboard', icon: 'home', route: `/dashboard/${idVisita}` },
     { title: 'Análisis de la Zona', icon: 'map', route: `/analisis/${idVisita}` },
@@ -35,46 +34,54 @@ export const EncabezadoGlobal = ({
 
   return (
     <>
-      {/* Barra de Navegación Superior */}
-      <header className="bg-white/80 backdrop-blur-md px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 z-40">
-        
-        {/* Botón Izquierdo: Volver o Logo */}
-        {rutaAnterior ? (
-          <button 
-            onClick={() => navigate(rutaAnterior)}
-            className="flex items-center gap-1 text-gray-500 active:scale-95 transition-transform"
-          >
-            <span className="material-symbols-outlined text-xl">arrow_back_ios_new</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest">{textoAnterior}</span>
-          </button>
-        ) : (
-          <div className="w-8 h-8 bg-[#00213b] rounded-lg flex items-center justify-center">
-             <span className="material-symbols-outlined text-white text-sm">real_estate_agent</span>
-          </div>
-        )}
+      {/* 1. ENCABEZADO PRINCIPAL (Menú + Logo) */}
+      <header className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-40">
+        {/* Menú Sándwich Izquierda */}
+        <button 
+          onClick={() => setMenuAbierto(true)}
+          className="text-[#00213b] p-1 active:scale-95 transition-transform"
+        >
+          <span className="material-symbols-outlined text-3xl">menu</span>
+        </button>
 
-        {/* Grupo Derecho: Siguiente y Menú Sándwich */}
-        <div className="flex items-center gap-4">
+        {/* Logo Centrado */}
+        <div className="flex-1 flex justify-center">
+          <img src="/logo.png" alt="Tu Conexión Inmobiliaria" className="h-10 object-contain" />
+        </div>
+
+        {/* Espaciador invisible para mantener el logo perfectamente al centro */}
+        <div className="w-10"></div>
+      </header>
+
+      {/* 2. SUB-ENCABEZADO DE NAVEGACIÓN (Atrás / Siguiente) */}
+      {(rutaAnterior || rutaSiguiente) && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
+          
+          {/* Botón Atrás */}
+          {rutaAnterior ? (
+            <button 
+              onClick={() => navigate(rutaAnterior)}
+              className="flex items-center gap-1 text-[#C5A059] active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[14px] font-bold">arrow_back_ios</span>
+              <span className="text-[11px] font-black uppercase tracking-widest">{textoAnterior}</span>
+            </button>
+          ) : <div />} {/* Espaciador */}
+
+          {/* Botón Siguiente */}
           {rutaSiguiente && (
             <button 
               onClick={() => navigate(rutaSiguiente)}
-              className="flex items-center gap-1 bg-[#C5A059] text-white px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-transform"
+              className="flex items-center gap-1 text-[#C5A059] active:scale-95 transition-transform"
             >
-              <span className="text-[10px] font-bold uppercase tracking-widest">{textoSiguiente}</span>
-              <span className="material-symbols-outlined text-sm">{iconoSiguiente}</span>
+              <span className="text-[11px] font-black uppercase tracking-widest">{textoSiguiente}</span>
+              <span className="material-symbols-outlined text-[14px] font-bold">{iconoSiguiente}</span>
             </button>
           )}
-
-          <button 
-            onClick={() => setMenuAbierto(true)}
-            className="text-[#00213b] p-1 active:scale-95 transition-transform"
-          >
-            <span className="material-symbols-outlined text-3xl">menu</span>
-          </button>
         </div>
-      </header>
+      )}
 
-      {/* OVERLAY DEL MENÚ (Fondo oscuro) */}
+      {/* OVERLAY DEL MENÚ */}
       {menuAbierto && (
         <div 
           className="fixed inset-0 bg-[#00213b]/40 backdrop-blur-sm z-50 transition-opacity"
@@ -85,21 +92,16 @@ export const EncabezadoGlobal = ({
       {/* PANEL LATERAL DEL MENÚ */}
       <div className={`fixed top-0 right-0 h-full w-4/5 max-w-sm bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${menuAbierto ? 'translate-x-0' : 'translate-x-full'}`}>
         
-        {/* Cabecera del Menú */}
         <div className="p-6 bg-[#00213b] text-white flex justify-between items-center rounded-bl-3xl">
           <div>
             <h3 className="font-bold text-lg leading-tight">Navegación</h3>
             <p className="text-[#C5A059] text-[10px] font-black uppercase tracking-widest">Tu Conexión Inmobiliaria</p>
           </div>
-          <button 
-            onClick={() => setMenuAbierto(false)}
-            className="bg-white/20 p-2 rounded-full active:scale-95"
-          >
+          <button onClick={() => setMenuAbierto(false)} className="bg-white/20 p-2 rounded-full active:scale-95">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        {/* Lista de Enlaces */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {menuItems.map((item, idx) => (
             <button
@@ -118,7 +120,6 @@ export const EncabezadoGlobal = ({
             </button>
           ))}
         </div>
-
       </div>
     </>
   );
