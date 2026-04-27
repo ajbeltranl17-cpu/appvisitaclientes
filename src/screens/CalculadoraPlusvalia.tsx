@@ -5,19 +5,19 @@ import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 export const CalculadoraPlusvalia = () => {
   const { idVisita } = useParams();
 
-  // Valores base (En el futuro vendrán del análisis de la URL/IA)
+  // Datos Base (En Fase de Backend, estos llegarán de la extracción de las URLs por IA)
   const [precioOriginal, setPrecioOriginal] = useState(3400000);
-  const [tasaPlusvalia, setTasaPlusvalia] = useState(7.5); // % anual basado en zona
-  const [tasaInflacion, setTasaInflacion] = useState(4.5); // % inflación estimada
-  const [anos, setAnos] = useState(10);
+  const [zonaAnalizada, setZonaAnalizada] = useState('Jardines del Virginia, Boca del Río');
+  
+  const [tasaPlusvalia, setTasaPlusvalia] = useState(7.5); 
+  const [tasaInflacion, setTasaInflacion] = useState(4.5); 
+  const [anos, setAnos] = useState(5); // Ajustado a 5 años por defecto para impacto a mediano plazo
   const [estadoPropiedad, setEstadoPropiedad] = useState('Entrega Inmediata');
 
   const [valorFuturo, setValorFuturo] = useState(0);
   const [valorInflacion, setValorInflacion] = useState(0);
 
-  // Cálculo de interés compuesto
   useEffect(() => {
-    // Si es preventa, podríamos añadir un bono de plusvalía inicial del 10-15%
     const bonoPreventa = estadoPropiedad === 'Preventa' ? 1.12 : 1;
     
     const futuro = (precioOriginal * bonoPreventa) * Math.pow(1 + tasaPlusvalia / 100, anos);
@@ -47,6 +47,39 @@ export const CalculadoraPlusvalia = () => {
           <p className="text-gray-500 text-sm mt-2">Proyecta el crecimiento de tu inversión frente a la inflación.</p>
         </section>
 
+        {/* NUEVO: Tarjeta de Transparencia (Datos Extraídos) */}
+        <div className="bg-[#00213b] text-white rounded-3xl p-5 shadow-md flex flex-col gap-4 relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+           
+           <div className="flex items-start justify-between border-b border-white/10 pb-3">
+              <div className="flex gap-3">
+                 <div className="bg-[#C5A059]/20 p-2 rounded-xl h-fit">
+                    <span className="material-symbols-outlined text-[#C5A059] text-[18px]">location_on</span>
+                 </div>
+                 <div>
+                    <p className="text-[9px] uppercase tracking-widest opacity-60 font-bold mb-1">Zona Analizada</p>
+                    <p className="text-xs font-bold leading-tight">{zonaAnalizada}</p>
+                 </div>
+              </div>
+           </div>
+           
+           <div className="flex items-center justify-between">
+              <div className="flex gap-3">
+                 <div className="bg-[#C5A059]/20 p-2 rounded-xl h-fit">
+                    <span className="material-symbols-outlined text-[#C5A059] text-[18px]">payments</span>
+                 </div>
+                 <div>
+                    <p className="text-[9px] uppercase tracking-widest opacity-60 font-bold mb-1">Precio de Compra</p>
+                    <p className="text-sm font-black">{formatearMoneda(precioOriginal)}</p>
+                 </div>
+              </div>
+              <div className="bg-green-500/20 border border-green-500/50 px-2 py-1 rounded-md flex items-center gap-1">
+                 <span className="material-symbols-outlined text-green-400 text-[10px]">verified</span>
+                 <span className="text-[8px] uppercase tracking-wider font-bold text-green-400">Datos Reales</span>
+              </div>
+           </div>
+        </div>
+
         {/* Comparativa Visual */}
         <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100 space-y-6">
           
@@ -56,33 +89,31 @@ export const CalculadoraPlusvalia = () => {
           </div>
 
           <div className="space-y-4">
-            {/* Barra de Plusvalía */}
             <div className="space-y-2">
               <div className="flex justify-between text-[10px] font-bold uppercase">
                 <span className="text-green-600">Plusvalía Inmobiliaria ({tasaPlusvalia}%)</span>
                 <span className="text-gray-900">{formatearMoneda(valorFuturo)}</span>
               </div>
               <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full" style={{ width: '100%' }}></div>
+                <div className="h-full bg-green-500 rounded-full transition-all duration-1000" style={{ width: '100%' }}></div>
               </div>
             </div>
 
-            {/* Barra de Inflación */}
             <div className="space-y-2">
               <div className="flex justify-between text-[10px] font-bold uppercase">
                 <span className="text-orange-500">Inflación Estimada ({tasaInflacion}%)</span>
                 <span className="text-gray-500">{formatearMoneda(valorInflacion)}</span>
               </div>
               <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-orange-400 rounded-full" style={{ width: `${(valorInflacion/valorFuturo)*100}%` }}></div>
+                <div className="h-full bg-orange-400 rounded-full transition-all duration-1000" style={{ width: `${(valorInflacion/valorFuturo)*100}%` }}></div>
               </div>
             </div>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-2xl flex items-center gap-3">
-            <span className="material-symbols-outlined text-green-600">trending_up</span>
+          <div className="bg-green-50 p-4 rounded-2xl flex items-start gap-3 border border-green-100">
+            <span className="material-symbols-outlined text-green-600 mt-0.5">trending_up</span>
             <p className="text-xs font-bold text-green-800 leading-tight">
-              Tu propiedad gana {formatearMoneda(valorFuturo - valorInflacion)} por encima de la inflación.
+              Tu propiedad gana <span className="text-black">{formatearMoneda(valorFuturo - valorInflacion)}</span> por encima de la inflación, protegiendo tu dinero.
             </p>
           </div>
         </div>
@@ -90,7 +121,6 @@ export const CalculadoraPlusvalia = () => {
         {/* Ajustes */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-6">
           
-          {/* Status Propiedad */}
           <div className="grid grid-cols-2 gap-2">
             {['Preventa', 'Entrega Inmediata'].map((status) => (
               <button
@@ -98,8 +128,8 @@ export const CalculadoraPlusvalia = () => {
                 onClick={() => setEstadoPropiedad(status)}
                 className={`py-3 rounded-xl font-bold text-[10px] uppercase tracking-tighter transition-all ${
                   estadoPropiedad === status 
-                  ? 'bg-[#00213b] text-white' 
-                  : 'bg-gray-50 text-gray-400'
+                  ? 'bg-[#00213b] text-white shadow-md' 
+                  : 'bg-gray-50 text-gray-400 border border-transparent hover:border-gray-200'
                 }`}
               >
                 {status}
@@ -107,7 +137,6 @@ export const CalculadoraPlusvalia = () => {
             ))}
           </div>
 
-          {/* Slider de Años */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest">Horizonte de tiempo</label>
@@ -120,7 +149,6 @@ export const CalculadoraPlusvalia = () => {
             />
           </div>
 
-          {/* Plusvalía de la Zona (Ajustable) */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest">Plusvalía Zona (Anual)</label>
