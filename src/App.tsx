@@ -50,7 +50,7 @@ export default function App() {
         <Route path="/galeria/:idVisita" element={<GaleriaVisita />} />
       <Route path="/diseno-ia/:idVisita" element={<DisenoIA />} />
         <Route path="/swipe/:idVisita" element={<SwipePareja />} />
-        <Route path="/deseos/:idVisita" element={<MisDeseos />} />
+      <Route path="/mis-deseos/:idVisita" element={<MisDeseos />} />
         <Route path="/catalogo/:idVisita" element={<CatalogoPropiedades />} />
         <Route path="/matriz/:idVisita" element={<MatrizComparativa />} />
 
