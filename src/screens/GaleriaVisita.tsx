@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const GaleriaVisita = () => {
+  const navigate = useNavigate();
   const { idVisita } = useParams();
   const [categoriaActiva, setCategoriaActiva] = useState('Interiores');
 
-  // Categorías de la Galería
   const categorias = ['Interiores', 'Exteriores', 'Amenidades'];
 
-  // Simulación de fotos (En Fase 3 se cargarán desde Firebase/URL de la ficha)
   const fotos = [
     { id: 1, cat: 'Interiores', url: 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=800' },
     { id: 2, cat: 'Interiores', url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800' },
@@ -23,24 +22,21 @@ export const GaleriaVisita = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Navegación lógica dentro del flujo */}
       <EncabezadoGlobal 
         rutaAnterior={`/analisis/${idVisita}`}
         textoAnterior="Entorno"
-        rutaSiguiente={`/amueblar/${idVisita}`}
+        rutaSiguiente={`/diseno-ia/${idVisita}`}
         textoSiguiente="Diseño IA"
       />
 
-      <main className="p-4 space-y-6 max-w-md mx-auto w-full">
+      <main className="p-4 space-y-6 max-w-md mx-auto w-full pb-8">
         
-        {/* Título de Sección */}
         <section className="px-2">
           <span className="text-[#C5A059] font-black uppercase text-[10px] tracking-[0.2em]">Recorrido Visual</span>
           <h1 className="text-3xl font-black text-[#00213b] mt-1">Galería Exclusiva</h1>
-          <p className="text-gray-500 text-sm mt-2">Explora cada rincón de Jardines del Virginia con detalle y alta definición.</p>
+          <p className="text-gray-500 text-sm mt-2">Explora cada rincón y usa la IA para visualizar el potencial de los espacios vacíos.</p>
         </section>
 
-        {/* Filtros de Categoría (Pestañas Doradas) */}
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           {categorias.map((cat) => (
             <button
@@ -57,7 +53,6 @@ export const GaleriaVisita = () => {
           ))}
         </div>
 
-        {/* Cuadrícula de Fotos (Estilo Pinterest / Moderno) */}
         <div className="grid grid-cols-2 gap-3">
           {fotosFiltradas.map((foto) => (
             <div 
@@ -67,33 +62,30 @@ export const GaleriaVisita = () => {
               <img 
                 src={foto.url} 
                 alt={foto.cat} 
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                className="w-full h-full object-cover transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                <span className="material-symbols-outlined text-white text-xl">zoom_in</span>
+              
+              {/* Botón Flotante de Diseño IA (Varita Mágica) - Solo en Interiores */}
+              {foto.cat === 'Interiores' && (
+                <div className="absolute top-2 right-2 z-10">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Evita que se abra la foto en grande si haces clic en el botón
+                      navigate(`/diseno-ia/${idVisita}`);
+                    }}
+                    className="bg-[#C5A059] text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end p-4 pointer-events-none">
+                <span className="material-symbols-outlined text-white/80 text-xl">zoom_in</span>
               </div>
             </div>
           ))}
         </div>
-
-        {/* Contador y Status */}
-        <div className="bg-white p-4 rounded-2xl flex items-center justify-between border border-gray-100">
-           <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Imágenes en alta resolución
-              </span>
-           </div>
-           <span className="text-[#00213b] font-black text-xs">
-             {fotosFiltradas.length} fotos
-           </span>
-        </div>
-
-        <footer className="text-center pt-4">
-          <p className="text-[9px] text-gray-300 uppercase tracking-[0.2em]">
-            Tu Conexión Inmobiliaria • Veracruz
-          </p>
-        </footer>
 
       </main>
     </div>
