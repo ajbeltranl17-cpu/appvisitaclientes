@@ -1,13 +1,13 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const Bienvenida = () => {
-  const navigate = useNavigate();
   const { idVisita } = useParams();
+  const navigate = useNavigate();
 
-  // En la Fase 3, este nombre vendrá de Firebase. Por ahora lo dejamos listo.
-  const nombreCliente = "Cliente"; 
+  // En la Fase 3, este nombre vendrá de Firebase.
+  const nombreCliente = "Cliente";
 
   const beneficios = [
     { icon: 'location_on', text: 'Ubicación exacta y ruta directa en Google Maps.' },
@@ -17,68 +17,69 @@ export const Bienvenida = () => {
     { icon: 'calculate', text: 'Calculadoras financieras (Hipoteca y Plusvalía).' },
   ];
 
+  // En la fase final, esta variable tomará la imagen principal de la URL que ingresaste.
+  const imagenPropiedadExtraida = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800";
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* 1. Encabezado Corporativo Único (Arriba) */}
+      {/* Encabezado Corporativo */}
       <EncabezadoGlobal />
 
-      <main className="flex-1 flex flex-col items-center p-6 relative">
-        
-        {/* 2. Tarjeta con Imagen Hero (Limpia y en grande) */}
-        <div className="w-full max-w-sm aspect-[16/10] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-8 mt-2">
+      <main className="flex-1 flex flex-col items-center p-6 relative pb-24">
+
+        {/* Tarjeta con Imagen Hero - CORREGIDA */}
+        <div className="w-full max-w-sm aspect-[16/10] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-8">
           <img 
-            src="/fondo-bienvenida.jpg" 
-            alt="Interior Lujoso" 
+            src={imagenPropiedadExtraida} 
+            alt="Tu próxima propiedad" 
             className="w-full h-full object-cover"
           />
         </div>
 
-        {/* 3. Textos de Bienvenida */}
-        <div className="text-center space-y-3 max-w-sm mb-10">
+        {/* Textos de Bienvenida */}
+        <div className="text-center space-y-3 max-w-sm mb-8">
           <span className="text-[#C5A059] font-bold uppercase text-[11px] tracking-[0.3em]">
             Experiencia Inmersiva
           </span>
-          
           <h1 className="text-4xl font-black text-[#00213b] leading-tight">
             ¡Todo listo para tu visita!
           </h1>
-          
-          <p className="text-gray-500 text-base leading-relaxed px-2">
-            Hola, <span className="text-[#00213b] font-bold">{nombreCliente}</span>. <br />
-            Para ver la <span className="text-[#C5A059] font-semibold">ubicación exacta en Google Maps</span> y acceder a tu panel de visita personalizado con todos los beneficios, por favor haz clic abajo.
+          <p className="text-gray-500 text-sm leading-relaxed mt-4">
+            Hola, <span className="font-bold text-[#00213b]">{nombreCliente}</span>.<br/>
+            Para ver la <span className="text-[#C5A059] font-bold">ubicación exacta en Google Maps</span> y acceder a tu panel de visita personalizado con todos los beneficios, por favor haz clic abajo.
           </p>
         </div>
 
-        {/* 4. Lista de Beneficios */}
-        <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-sm border border-gray-100 mb-10">
-          <h3 className="font-extrabold text-[#00213b] text-sm uppercase tracking-wider mb-6 pb-2 border-b border-gray-100">
-            ¿Qué encontrarás adentro?
+        {/* Lista de Beneficios */}
+        <div className="w-full max-w-sm bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 mb-8">
+          <h3 className="text-xs font-black text-[#00213b] uppercase tracking-widest mb-4 text-center border-b border-gray-100 pb-3">
+            ¿Qué incluye tu panel?
           </h3>
-          <ul className="space-y-5">
-            {beneficios.map((beneficio, index) => (
-              <li key={index} className="flex items-start gap-4 text-gray-700">
-                <span className="material-symbols-outlined text-[#C5A059] mt-0.5 text-xl flex-shrink-0">
-                  {beneficio.icon}
-                </span>
-                <p className="text-sm leading-snug">{beneficio.text}</p>
+          <ul className="space-y-4">
+            {beneficios.map((item, idx) => (
+              <li key={idx} className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 text-[#C5A059]">
+                  <span className="material-symbols-outlined text-xl">{item.icon}</span>
+                </div>
+                <span className="text-sm text-gray-600 font-medium leading-tight">{item.text}</span>
               </li>
             ))}
           </ul>
         </div>
-
-        {/* 5. Botón de Acción Principal */}
-        <button 
-          onClick={() => navigate(`/dashboard/${idVisita}`)}
-          className="w-full max-w-xs bg-[#00213b] text-white py-5 rounded-2xl font-bold text-lg shadow-2xl hover:bg-[#00335c] transition-all active:scale-95 flex items-center justify-center gap-3 mb-6"
-        >
-          Ver Ubicación Exacta
-          <span className="material-symbols-outlined">map</span>
-        </button>
-
-        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mt-auto pb-4">
-          Impulsado por Tu Conexión Inmobiliaria
-        </p>
       </main>
+
+      {/* Botón Fijo Abajo */}
+      <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent">
+        <div className="max-w-sm mx-auto">
+          <button 
+            onClick={() => navigate(`/dashboard/${idVisita}`)}
+            className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95"
+          >
+            Comenzar mi experiencia
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
