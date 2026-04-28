@@ -29,9 +29,9 @@ export const CalculadoraPlusvalia = () => {
     if (estadoPropiedad === 'Seminuevo') tasa -= 1.5; // Ajuste por depreciación física
 
     // 3. Ajuste por horizonte de tiempo
-    // Los mercados tienden a estabilizarse a largo plazo. 
-    // Usamos 5 años como punto base. Menos de 5 años = tasa ligeramente mayor. Más de 5 años = tasa se estabiliza.
-    const ajusteTiempo = (5 - anos) * 0.1; 
+    // Lógica corregida: A mayor número de años, mayor tasa de plusvalía.
+    // Usamos 5 años como punto base.
+    const ajusteTiempo = (anos - 5) * 0.1; 
     tasa += ajusteTiempo;
 
     // Aseguramos que la tasa tenga lógica financiera (no menor a inflación, no mayor a topes irreales)
