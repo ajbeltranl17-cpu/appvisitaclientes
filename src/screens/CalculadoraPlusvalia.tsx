@@ -17,14 +17,25 @@ export const CalculadoraPlusvalia = () => {
   const [valorFuturo, setValorFuturo] = useState(0);
   const [valorInflacion, setValorInflacion] = useState(0);
 
-  // Tasa base fija que vendrá de la URL en el Backend
+  // 1. Tasa base fija que vendrá de la URL en el Backend
   const tasaBaseZona = 7.5; 
 
-  // Lógica de ajuste dinámico según el estado de la propiedad
+  // Lógica de ajuste dinámico integral (Zona + Estado + Tiempo)
   const obtenerTasaAjustada = () => {
-    if (estadoPropiedad === 'Preventa') return tasaBaseZona + 3.0; // Bono por riesgo/obra
-    if (estadoPropiedad === 'Seminuevo') return tasaBaseZona - 1.5; // Ajuste por depreciación física
-    return tasaBaseZona; // 'Entrega Inmediata'
+    let tasa = tasaBaseZona;
+
+    // 2. Ajuste por estado de la propiedad
+    if (estadoPropiedad === 'Preventa') tasa += 3.0; // Bono por riesgo/obra
+    if (estadoPropiedad === 'Seminuevo') tasa -= 1.5; // Ajuste por depreciación física
+
+    // 3. Ajuste por horizonte de tiempo
+    // Los mercados tienden a estabilizarse a largo plazo. 
+    // Usamos 5 años como punto base. Menos de 5 años = tasa ligeramente mayor. Más de 5 años = tasa se estabiliza.
+    const ajusteTiempo = (5 - anos) * 0.1; 
+    tasa += ajusteTiempo;
+
+    // Aseguramos que la tasa tenga lógica financiera (no menor a inflación, no mayor a topes irreales)
+    return Math.max(3.0, Math.min(18.0, Number(tasa.toFixed(2))));
   };
 
   const tasaPlusvalia = obtenerTasaAjustada();
@@ -182,7 +193,7 @@ export const CalculadoraPlusvalia = () => {
               </div>
             </div>
             <p className="text-[9px] text-gray-400 mt-1 flex justify-end items-center gap-1 font-medium italic">
-              *Tasa ajustada por ubicación y estado.
+              *Tasa ajustada por ubicación, estado y tiempo.
             </p>
           </div>
         </div>
