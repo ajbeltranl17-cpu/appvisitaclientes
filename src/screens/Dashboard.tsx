@@ -59,12 +59,19 @@ export const Dashboard = () => {
             <span className="material-symbols-outlined text-lg">near_me</span>
             VER RUTA EN GOOGLE MAPS
           </a>
-        </div>
+        </div>{/* NUEVO BOTÓN DE SIGUIENTE PASO: INICIAR VISITA */}
+        <button 
+          onClick={() => navigate(`/iniciar-visita/${idVisita}`)}
+          className="w-full mt-4 bg-[#00213b] text-white py-5 rounded-2xl font-black text-[13px] md:text-base uppercase tracking-widest shadow-[0_10px_20px_rgba(0,33,59,0.2)] flex justify-center items-center gap-3 active:scale-95 transition-all border border-[#00335c]"
+        >
+          Siguiente: Iniciar Visita
+          <span className="material-symbols-outlined text-xl">arrow_forward</span>
+        </button>
 
         {/* Módulos de Herramientas de Decisión (LISTA COMPLETA) */}
         <div className="grid grid-cols-2 gap-4">
           {[
-            { title: 'Iniciar Visita', icon: 'directions_walk', color: 'bg-blue-600', route: `/iniciar-visita/${idVisita}` },
+          
             { title: 'La Zona', icon: 'explore', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
             { title: 'Galería', icon: 'photo_library', color: 'bg-purple-600', route: `/galeria/${idVisita}` },
             { title: 'Diseño IA', icon: 'auto_awesome', color: 'bg-orange-500', route: `/diseno-ia/${idVisita}` },
