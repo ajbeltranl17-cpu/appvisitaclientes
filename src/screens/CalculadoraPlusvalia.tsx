@@ -167,7 +167,7 @@ const navigate = useNavigate();
             onClick={() => navigate(`/galeria/${idVisita}`)}
             className="w-full bg-[#00213b] text-white py-5 rounded-2xl font-black text-[13px] md:text-base uppercase tracking-widest shadow-[0_10px_20px_rgba(0,33,59,0.2)] flex justify-center items-center gap-3 active:scale-95 transition-all border border-[#00335c]"
           >
-            Siguiente: Ver Galería de Propiedades
+            Siguiente: Ver Galería de Mi Visita
             <span className="material-symbols-outlined text-xl">arrow_forward</span>
           </button>
         </div>
