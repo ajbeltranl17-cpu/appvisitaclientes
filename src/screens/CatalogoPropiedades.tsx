@@ -185,7 +185,7 @@ export const CatalogoPropiedades = () => {
               onClick={() => navigate(`/matriz/${idVisita}`)}
               className="bg-[#C5A059] text-white px-6 py-3.5 rounded-2xl font-bold flex items-center gap-2 active:scale-95 transition-transform"
             >
-              Ver Matriz
+              Comparar
               <span className="material-symbols-outlined text-sm">view_week</span>
             </button>
           </div>
