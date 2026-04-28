@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const DisenoIA = () => {
   const { idVisita } = useParams();
+  const navigate = useNavigate();
   const [estiloSeleccionado, setEstiloSeleccionado] = useState('Moderno');
   const [procesando, setProcesando] = useState(false);
 
@@ -94,15 +95,23 @@ export const DisenoIA = () => {
         </section>
 
         {/* Botón de Acción IA */}
-        <button 
-          onClick={manejarGeneracion}
-          disabled={procesando}
-          className="w-full bg-[#00213b] text-white py-5 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#00335c] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-        >
-          <span className="material-symbols-outlined">auto_awesome</span>
-          {procesando ? 'Procesando con IA...' : 'Generar Diseño IA'}
-        </button>
-
+        <button
+  onClick={generarImagen} // O la función que tengas para la IA
+  className="w-full bg-[#C5A059] hover:bg-[#b08d4a] text-[#00213b] py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg flex justify-center items-center gap-2 transition-all active:scale-95"
+>
+  <span className="material-symbols-outlined">auto_awesome</span>
+  Generar Diseño IA
+</button>
+{/* BOTÓN DE NAVEGACIÓN CONSISTENTE EN AZUL */}
+        <div className="mt-10 pb-8 px-4">
+          <button 
+            onClick={() => navigate(`/swipe/${idVisita}`)}
+            className="w-full bg-[#00213b] text-white py-5 rounded-2xl font-black text-[13px] md:text-base uppercase tracking-widest shadow-[0_10px_20px_rgba(0,33,59,0.2)] flex justify-center items-center gap-3 active:scale-95 transition-all border border-[#00335c]"
+          >
+            Siguiente: Swipe de Propiedades
+            <span className="material-symbols-outlined text-xl">style</span>
+          </button>
+        </div>
       </main>
     </div>
   );
