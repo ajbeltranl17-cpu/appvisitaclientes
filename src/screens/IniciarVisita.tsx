@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const IniciarVisita = () => {
   const { idVisita } = useParams();
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // Lienzo invisible para tomar la foto
   
