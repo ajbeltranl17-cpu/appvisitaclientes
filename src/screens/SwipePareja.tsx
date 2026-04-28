@@ -145,6 +145,16 @@ export const SwipePareja = () => {
             </div>
           )}
         </div>
+        {/* NUEVO BOTÓN DE SIGUIENTE PASO: MIS DESEOS */}
+        <div className="mt-8 pb-8 px-4">
+          <button 
+            onClick={() => navigate(`/mis-deseos/${idVisita}`)}
+            className="w-full bg-[#00213b] text-white py-5 rounded-2xl font-black text-[13px] md:text-base uppercase tracking-widest shadow-[0_10px_20px_rgba(0,33,59,0.2)] flex justify-center items-center gap-3 active:scale-95 transition-all border border-[#00335c]"
+          >
+            Siguiente: Mis Deseos
+            <span className="material-symbols-outlined text-xl">favorite</span>
+          </button>
+        </div>
       </main>
     </div>
   );
