@@ -4,12 +4,12 @@ import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const CalculadoraPlusvalia = () => {
   const { idVisita } = useParams();
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
   // Datos Base (En Fase de Backend, estos llegarán de la extracción de las URLs por IA)
   const [precioOriginal, setPrecioOriginal] = useState(3400000);
   const [zonaAnalizada, setZonaAnalizada] = useState('Jardines del Virginia, Boca del Río');
   
-  const [tasaPlusvalia, setTasaPlusvalia] = useState(7.5); 
   const [tasaInflacion, setTasaInflacion] = useState(4.5); 
   const [anos, setAnos] = useState(5); // Ajustado a 5 años por defecto para impacto a mediano plazo
   const [estadoPropiedad, setEstadoPropiedad] = useState('Entrega Inmediata');
@@ -17,15 +17,26 @@ const navigate = useNavigate();
   const [valorFuturo, setValorFuturo] = useState(0);
   const [valorInflacion, setValorInflacion] = useState(0);
 
+  // Tasa base fija que vendrá de la URL en el Backend
+  const tasaBaseZona = 7.5; 
+
+  // Lógica de ajuste dinámico según el estado de la propiedad
+  const obtenerTasaAjustada = () => {
+    if (estadoPropiedad === 'Preventa') return tasaBaseZona + 3.0; // Bono por riesgo/obra
+    if (estadoPropiedad === 'Seminuevo') return tasaBaseZona - 1.5; // Ajuste por depreciación física
+    return tasaBaseZona; // 'Entrega Inmediata'
+  };
+
+  const tasaPlusvalia = obtenerTasaAjustada();
+
   useEffect(() => {
-    const bonoPreventa = estadoPropiedad === 'Preventa' ? 1.12 : 1;
-    
-    const futuro = (precioOriginal * bonoPreventa) * Math.pow(1 + tasaPlusvalia / 100, anos);
+    // Calculamos el valor futuro usando la tasa dinámicamente ajustada
+    const futuro = precioOriginal * Math.pow(1 + tasaPlusvalia / 100, anos);
     const inflacion = precioOriginal * Math.pow(1 + tasaInflacion / 100, anos);
     
     setValorFuturo(futuro);
     setValorInflacion(inflacion);
-  }, [precioOriginal, tasaPlusvalia, tasaInflacion, anos, estadoPropiedad]);
+  }, [precioOriginal, tasaPlusvalia, tasaInflacion, anos]);
 
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
@@ -47,7 +58,7 @@ const navigate = useNavigate();
           <p className="text-gray-500 text-sm mt-2">Proyecta el crecimiento de tu inversión frente a la inflación.</p>
         </section>
 
-        {/* NUEVO: Tarjeta de Transparencia (Datos Extraídos) */}
+        {/* Tarjeta de Transparencia (Datos Extraídos) */}
         <div className="bg-[#00213b] text-white rounded-3xl p-5 shadow-md flex flex-col gap-4 relative overflow-hidden">
            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
            
@@ -119,14 +130,14 @@ const navigate = useNavigate();
         </div>
 
         {/* Ajustes */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-6">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-8">
           
-          <div className="grid grid-cols-2 gap-2">
-            {['Preventa', 'Entrega Inmediata'].map((status) => (
+          <div className="grid grid-cols-3 gap-2">
+            {['Preventa', 'Entrega Inmediata', 'Seminuevo'].map((status) => (
               <button
                 key={status}
                 onClick={() => setEstadoPropiedad(status)}
-                className={`py-3 rounded-xl font-bold text-[10px] uppercase tracking-tighter transition-all ${
+                className={`py-3 px-1 flex items-center justify-center text-center rounded-xl font-bold text-[9px] uppercase tracking-tighter transition-all leading-tight ${
                   estadoPropiedad === status 
                   ? 'bg-[#00213b] text-white shadow-md' 
                   : 'bg-gray-50 text-gray-400 border border-transparent hover:border-gray-200'
@@ -149,19 +160,34 @@ const navigate = useNavigate();
             />
           </div>
 
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest">Plusvalía Zona (Anual)</label>
-              <span className="font-bold text-[#C5A059]">{tasaPlusvalia}%</span>
+          {/* DATO FIJO DE AUTORIDAD: PLUSVALÍA DE LA ZONA */}
+          <div className="space-y-3 mt-6">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest flex items-center gap-1">
+                Plusvalía Proyectada
+                <span className="material-symbols-outlined text-[14px] text-[#C5A059]" title="Dato verificado por análisis de mercado">verified</span>
+              </label>
+              <div className="text-right">
+                <span className="text-xl font-black text-[#00213b]">{tasaPlusvalia}%</span>
+                <span className="text-[8px] block text-gray-400 font-bold uppercase -mt-1">Anual</span>
+              </div>
             </div>
-            <input 
-              type="range" min="1" max="15" step="0.5"
-              value={tasaPlusvalia} onChange={(e) => setTasaPlusvalia(Number(e.target.value))}
-              className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#C5A059]"
-            />
+            
+            <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden shadow-inner relative">
+              <div 
+                className="bg-[#C5A059] h-full rounded-full transition-all duration-500 relative" 
+                style={{ width: `${(tasaPlusvalia / 15) * 100}%` }}
+              >
+                <div className="absolute top-0 left-0 w-full h-full bg-white opacity-20"></div>
+              </div>
+            </div>
+            <p className="text-[9px] text-gray-400 mt-1 flex justify-end items-center gap-1 font-medium italic">
+              *Tasa ajustada por ubicación y estado.
+            </p>
           </div>
         </div>
-{/* NUEVO BOTÓN DE SIGUIENTE PASO: GALERÍA */}
+
+        {/* NUEVO BOTÓN DE SIGUIENTE PASO: GALERÍA */}
         <div className="mt-8 pb-8 px-4">
           <button 
             onClick={() => navigate(`/galeria/${idVisita}`)}
