@@ -96,7 +96,7 @@ export const DisenoIA = () => {
 
         {/* Botón de Acción IA */}
         <button
-  onClick={generarImagen} // O la función que tengas para la IA
+  onClick={manejarGeneracion} // O la función que tengas para la IA
   className="w-full bg-[#C5A059] hover:bg-[#b08d4a] text-[#00213b] py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg flex justify-center items-center gap-2 transition-all active:scale-95"
 >
   <span className="material-symbols-outlined">auto_awesome</span>
