@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const CalculadoraPlusvalia = () => {
   const { idVisita } = useParams();
-
+const navigate = useNavigate();
   // Datos Base (En Fase de Backend, estos llegarán de la extracción de las URLs por IA)
   const [precioOriginal, setPrecioOriginal] = useState(3400000);
   const [zonaAnalizada, setZonaAnalizada] = useState('Jardines del Virginia, Boca del Río');
@@ -161,7 +161,16 @@ export const CalculadoraPlusvalia = () => {
             />
           </div>
         </div>
-
+{/* NUEVO BOTÓN DE SIGUIENTE PASO: GALERÍA */}
+        <div className="mt-8 pb-8 px-4">
+          <button 
+            onClick={() => navigate(`/galeria/${idVisita}`)}
+            className="w-full bg-[#00213b] text-white py-5 rounded-2xl font-black text-[13px] md:text-base uppercase tracking-widest shadow-[0_10px_20px_rgba(0,33,59,0.2)] flex justify-center items-center gap-3 active:scale-95 transition-all border border-[#00335c]"
+          >
+            Siguiente: Ver Galería de Propiedades
+            <span className="material-symbols-outlined text-xl">arrow_forward</span>
+          </button>
+        </div>
       </main>
     </div>
   );
