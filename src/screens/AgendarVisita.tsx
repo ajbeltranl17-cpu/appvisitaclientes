@@ -5,9 +5,8 @@ import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 export const AgendarVisita = () => {
   const navigate = useNavigate();
   
-  // VARIABLE TEMPORAL: La ponemos en "true" para poder ver el botón hoy. 
-  // Cuando conectemos el Login (Motor 1), esto dependerá del rol en Firebase.
-  const isAdmin = true; 
+  // Revisa la memoria del navegador para ver qué rol inició sesión
+  const isAdmin = localStorage.getItem('userRole') === 'admin';
 
   // Icono oficial de WhatsApp en formato vectorial (SVG)
   const iconoWhatsApp = (
