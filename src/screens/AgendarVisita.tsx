@@ -1,7 +1,13 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const AgendarVisita = () => {
+  const navigate = useNavigate();
+  
+  // VARIABLE TEMPORAL: La ponemos en "true" para poder ver el botón hoy. 
+  // Cuando conectemos el Login (Motor 1), esto dependerá del rol en Firebase.
+  const isAdmin = true; 
 
   // Icono oficial de WhatsApp en formato vectorial (SVG)
   const iconoWhatsApp = (
@@ -32,15 +38,29 @@ export const AgendarVisita = () => {
 
       <main className="max-w-3xl mx-auto p-4 sm:p-8">
         
-        <div className="mb-8">
-          <span className="text-[#C5A059] uppercase font-bold text-xs tracking-widest">
-            Acceso Restringido - Agentes
-          </span>
-          <h1 className="text-3xl font-black text-[#00213b] mt-1 mb-2">Agendar Visita</h1>
-          <p className="text-gray-500 text-sm">
-            Gestión de Clientes<br/><br/>
-            Complete los detalles a continuación para generar un entorno interactivo y enviarlo directamente a su cliente.
-          </p>
+        {/* Contenedor Flex para Título y Botón de Admin */}
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <span className="text-[#C5A059] uppercase font-bold text-xs tracking-widest">
+              Acceso Restringido - Agentes
+            </span>
+            <h1 className="text-3xl font-black text-[#00213b] mt-1 mb-2">Agendar Visita</h1>
+            <p className="text-gray-500 text-sm">
+              Gestión de Clientes<br/><br/>
+              Complete los detalles a continuación para generar un entorno interactivo y enviarlo directamente a su cliente.
+            </p>
+          </div>
+          
+          {/* Botón de Admin (Aparece solo si isAdmin es true) */}
+          {isAdmin && (
+            <button 
+              onClick={() => navigate('/acceso-admin')}
+              className="bg-[#00213b] text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-[#c5a059] transition-colors shadow-sm flex items-center gap-2 mt-2"
+            >
+              <span className="material-symbols-outlined text-sm">shield_person</span>
+              Admin
+            </button>
+          )}
         </div>
 
         {/* Tarjeta Principal del Formulario */}
