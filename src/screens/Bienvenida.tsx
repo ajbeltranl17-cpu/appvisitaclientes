@@ -1,84 +1,130 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+
+// Definimos qué datos esperamos recibir de Firebase
+interface VisitaData {
+  clienteNombre: string;
+  asesorNombre: string;
+  propiedadUrl: string;
+  // Agregaremos más campos conforme los necesitemos
+}
 
 export const Bienvenida = () => {
-  const { idVisita } = useParams();
+  // 1. Extraemos el ID de la URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  // En la Fase 3, este nombre vendrá de Firebase.
-  const nombreCliente = "Cliente";
+  // 2. Memoria de la pantalla
+  const [visita, setVisita] = useState<VisitaData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const beneficios = [
-    { icon: 'location_on', text: 'Ubicación exacta y ruta directa en Google Maps.' },
-    { icon: 'photo_library', text: 'Galería completa de fotos de la propiedad.' },
-    { icon: 'map', text: 'Análisis de la zona (escuelas, bancos, restaurantes).' },
-    { icon: 'grid_view', text: 'Matriz comparativa contra otras opciones.' },
-    { icon: 'calculate', text: 'Calculadoras financieras (Hipoteca y Plusvalía).' },
-  ];
+  // 3. El buscador: Va a Firebase en cuanto la pantalla carga
+  useEffect(() => {
+    const fetchVisita = async () => {
+      if (!id) {
+        setError('Enlace no válido');
+        setLoading(false);
+        return;
+      }
 
-  // En la fase final, esta variable tomará la imagen principal de la URL que ingresaste.
-  const imagenPropiedadExtraida = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800";
+      try {
+        const docRef = doc(db, 'visitas', id);
+        const docSnap = await getDoc(docRef);
 
+        if (docSnap.exists()) {
+          setVisita(docSnap.data() as VisitaData);
+        } else {
+          setError('No encontramos esta invitación. Puede que haya expirado.');
+        }
+      } catch (err) {
+        console.error("Error al buscar la visita:", err);
+        setError('Hubo un problema al cargar tu experiencia.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisita();
+  }, [id]);
+
+  // Pantalla de Carga
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#00213b] flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[#C5A059] mt-4 font-bold tracking-widest uppercase text-sm">Preparando tu experiencia...</p>
+      </div>
+    );
+  }
+
+  // Pantalla de Error (Si el link está mal)
+  if (error || !visita) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+        <span className="material-symbols-outlined text-6xl text-red-400 mb-4">error_outline</span>
+        <h2 className="text-2xl font-black text-[#00213b] mb-2">¡Ups! Algo salió mal</h2>
+        <p className="text-gray-500 mb-6">{error}</p>
+        <button 
+          onClick={() => navigate('/')}
+          className="bg-[#00213b] text-white px-6 py-3 rounded-xl font-bold"
+        >
+          Ir al Inicio
+        </button>
+      </div>
+    );
+  }
+
+  // Pantalla de Éxito: ¡La Bienvenida VIP!
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Encabezado Corporativo */}
-      <EncabezadoGlobal />
-
-      <main className="flex-1 flex flex-col items-center p-6 relative pb-24">
-
-        {/* Tarjeta con Imagen Hero */}
-        <div className="w-full max-w-sm aspect-[16/10] bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 mb-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-8">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border-t-8 border-t-[#C5A059]">
+        
+        {/* Imagen de Portada (Simulada por ahora) */}
+        <div className="h-64 w-full relative">
           <img 
-            src={imagenPropiedadExtraida} 
-            alt="Tu próxima propiedad" 
+            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+            alt="Propiedad" 
             className="w-full h-full object-cover"
           />
+          {/* Overlay oscuro para darle elegancia */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#00213b]/90 to-transparent"></div>
+          
+          <div className="absolute bottom-6 left-6 right-6">
+            <span className="bg-[#C5A059] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+              Experiencia Privada
+            </span>
+            <h1 className="text-3xl font-black text-white mt-2 leading-tight">
+              Bienvenido,<br/>{visita.clienteNombre}
+            </h1>
+          </div>
         </div>
 
-        {/* Textos de Bienvenida */}
-        <div className="text-center space-y-3 max-w-sm mb-8">
-          <span className="text-[#C5A059] font-bold uppercase text-[11px] tracking-[0.3em]">
-            Experiencia Inmersiva
-          </span>
-          <h1 className="text-4xl font-black text-[#00213b] leading-tight">
-            ¡Todo listo para tu visita!
-          </h1>
-          <p className="text-gray-500 text-sm leading-relaxed mt-4">
-            Hola, <span className="font-bold text-[#00213b]">{nombreCliente}</span>.<br/>
-            Para ver la <span className="text-[#C5A059] font-bold">ubicación exacta en Google Maps</span> y acceder a tu panel de visita personalizado con todos los beneficios, por favor haz clic abajo.
+        {/* Contenido del Mensaje */}
+        <div className="p-8 text-center">
+          <p className="text-gray-600 mb-8 text-sm leading-relaxed">
+            Tu asesor <strong className="text-[#00213b]">{visita.asesorNombre}</strong> ha preparado este portal exclusivo para tu próxima visita. Aquí encontrarás todos los detalles de la propiedad, la ruta interactiva y herramientas de diseño.
           </p>
-        </div>
 
-        {/* Lista de Beneficios */}
-        <div className="w-full max-w-sm bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 mb-8">
-          <h3 className="text-xs font-black text-[#00213b] uppercase tracking-widest mb-4 text-center border-b border-gray-100 pb-3">
-            ¿Qué incluye tu panel?
-          </h3>
-          <ul className="space-y-4">
-            {beneficios.map((item, idx) => (
-              <li key={idx} className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 text-[#C5A059]">
-                  <span className="material-symbols-outlined text-xl">{item.icon}</span>
-                </div>
-                <span className="text-sm text-gray-600 font-medium leading-tight">{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </main>
-
-      {/* Botón Fijo Abajo (ACTUALIZADO) */}
-      <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent">
-        <div className="max-w-sm mx-auto">
+          {/* Botón para entrar al Dashboard (Pasamos el ID) */}
           <button 
-            onClick={() => navigate(`/dashboard/${idVisita}`)}
-            className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95"
+            onClick={() => navigate(`/dashboard/${id}`)}
+            className="w-full bg-[#00213b] hover:bg-[#00182b] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 group"
           >
-            Ver Ubicación Exacta
-            <span className="material-symbols-outlined">location_on</span>
+            Entrar a mi Portal
+            <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+              arrow_forward
+            </span>
           </button>
+          
+          <div className="mt-6 flex justify-center items-center gap-2 text-xs text-gray-400">
+            <span className="material-symbols-outlined text-[14px]">lock</span>
+            Conexión Segura - Tu Conexión Inmobiliaria
+          </div>
         </div>
+
       </div>
     </div>
   );
