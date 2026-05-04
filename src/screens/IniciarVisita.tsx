@@ -1,19 +1,25 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const IniciarVisita = () => {
   const { idVisita } = useParams();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null); // Lienzo invisible para tomar la foto
+  const canvasRef = useRef<HTMLCanvasElement>(null); 
   
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [fotos, setFotos] = useState<string[]>([]); // Memoria de la galería
-  const [flash, setFlash] = useState(false); // Efecto visual de captura
-  const [verGaleria, setVerGaleria] = useState(false); // Controla si vemos la cámara o la galería
+  const [fotos, setFotos] = useState<string[]>([]); 
+  const [flash, setFlash] = useState(false); 
+  const [verGaleria, setVerGaleria] = useState(false); 
 
-  // Encender la cámara
+  // Estado para las notas
+  const [nota, setNota] = useState('');
+  const [guardandoNota, setGuardandoNota] = useState(false);
+
   useEffect(() => {
     const startCamera = async () => {
       try {
@@ -29,7 +35,6 @@ export const IniciarVisita = () => {
       }
     };
     
-    // Solo encender si no estamos viendo la galería
     if (!verGaleria) {
       startCamera();
     }
@@ -42,31 +47,60 @@ export const IniciarVisita = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verGaleria]);
 
-  // Función Mágica: Tomar la foto
-  const capturarFoto = () => {
-    if (videoRef.current && canvasRef.current) {
+  // Capturar y subir a Firebase
+  const capturarFoto = async () => {
+    if (videoRef.current && canvasRef.current && idVisita) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Ajustar el lienzo al tamaño real del video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      // "Pintar" el fotograma actual en el lienzo
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Convertir el dibujo a una imagen (formato base64)
         const imagenUrl = canvas.toDataURL('image/jpeg', 0.8);
         
-        // Guardar en nuestra galería (poniendo la más nueva al principio)
+        // 1. Mostramos la foto inmediatamente en pantalla
         setFotos(prev => [imagenUrl, ...prev]);
-        
-        // Disparar el efecto de flash por 150 milisegundos
         setFlash(true);
         setTimeout(() => setFlash(false), 150);
+
+        // 2. Subimos a Firebase Storage en segundo plano
+        try {
+          const nombreFoto = `visita_${idVisita}_${Date.now()}.jpg`;
+          const storageRef = ref(storage, `capturas/${nombreFoto}`);
+          
+          await uploadString(storageRef, imagenUrl, 'data_url');
+          const urlReal = await getDownloadURL(storageRef);
+
+          // 3. Guardamos el link en Firestore
+          const visitaRef = doc(db, 'visitas', idVisita);
+          await updateDoc(visitaRef, {
+            fotosCliente: arrayUnion(urlReal)
+          });
+        } catch (error) {
+          console.error("Error guardando la foto en la nube:", error);
+        }
       }
+    }
+  };
+
+  // Función para guardar notas de texto
+  const guardarNota = async () => {
+    if (!nota.trim() || !idVisita) return;
+    setGuardandoNota(true);
+    
+    try {
+      const visitaRef = doc(db, 'visitas', idVisita);
+      await updateDoc(visitaRef, {
+        notasCliente: arrayUnion(nota)
+      });
+      setNota(''); // Limpiamos la barra tras guardar
+    } catch (error) {
+      console.error("Error guardando nota:", error);
+    } finally {
+      setGuardandoNota(false);
     }
   };
 
@@ -81,7 +115,6 @@ export const IniciarVisita = () => {
 
       <main className="flex-1 p-4 flex flex-col gap-4 max-w-md mx-auto w-full relative">
         
-        {/* === VISTA DE CÁMARA === */}
         {!verGaleria ? (
           <>
             <div className="bg-black rounded-3xl overflow-hidden shadow-lg relative aspect-[3/4] flex items-center justify-center border-4 border-white">
@@ -94,10 +127,8 @@ export const IniciarVisita = () => {
                 className="absolute inset-0 w-full h-full object-cover"
               />
               
-              {/* Lienzo invisible para capturar */}
               <canvas ref={canvasRef} className="hidden" />
 
-              {/* Efecto Flash Blanco */}
               {flash && <div className="absolute inset-0 bg-white z-20 opacity-80 transition-opacity duration-100"></div>}
               
               <div className="absolute inset-0 border border-white/20 m-6 rounded-xl pointer-events-none grid grid-cols-3 grid-rows-3 z-10">
@@ -123,14 +154,27 @@ export const IniciarVisita = () => {
             </div>
 
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mt-2">
-              <input 
-                type="text" 
-                placeholder="Escribe una nota de la propiedad..." 
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm mb-6 focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-all"
-              />
+              
+              {/* Barra de Notas con Botón de Guardar */}
+              <div className="flex gap-2 mb-6">
+                <input 
+                  type="text" 
+                  value={nota}
+                  onChange={(e) => setNota(e.target.value)}
+                  placeholder="Escribe una nota de la propiedad..." 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-all"
+                />
+                <button 
+                  onClick={guardarNota}
+                  disabled={guardandoNota || !nota.trim()}
+                  className="bg-[#00213b] text-[#C5A059] px-4 rounded-xl flex items-center justify-center disabled:opacity-50 transition-opacity"
+                >
+                  <span className="material-symbols-outlined">save</span>
+                </button>
+              </div>
+
               <div className="flex justify-center gap-8 items-center">
                 
-                {/* Botón Galería Dinámico */}
                 <button 
                   onClick={() => setVerGaleria(true)}
                   className="w-12 h-12 rounded-full flex items-center justify-center transition-colors relative bg-gray-100 border-2 border-transparent hover:border-[#C5A059]"
@@ -144,7 +188,6 @@ export const IniciarVisita = () => {
                   )}
                 </button>
                 
-                {/* Botón Disparador (Cámara) */}
                 <button 
                   onClick={capturarFoto}
                   className="w-16 h-16 bg-[#00213b] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform border-4 border-white ring-2 ring-[#00213b]"
@@ -152,7 +195,6 @@ export const IniciarVisita = () => {
                   <span className="material-symbols-outlined text-3xl">photo_camera</span>
                 </button>
                 
-                {/* Botón Video */}
                 <button className="w-12 h-12 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
                   <span className="material-symbols-outlined">videocam</span>
                 </button>
@@ -160,8 +202,6 @@ export const IniciarVisita = () => {
             </div>
           </>
         ) : (
-          
-          /* === VISTA DE GALERÍA (Se sobrepone al hacer clic en el botón) === */
           <div className="bg-white rounded-3xl p-4 shadow-lg border border-gray-100 min-h-[500px]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-[#00213b]">Galería de Visita ({fotos.length})</h3>
@@ -189,7 +229,7 @@ export const IniciarVisita = () => {
             )}
           </div>
         )}
-{/* NUEVO BOTÓN DE SIGUIENTE PASO: ANÁLISIS DE LA ZONA */}
+
         <div className="mt-8 pb-8 px-4">
           <button 
             onClick={() => navigate(`/analisis/${idVisita}`)}
