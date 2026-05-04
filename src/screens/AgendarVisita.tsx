@@ -53,7 +53,7 @@ export const AgendarVisita = () => {
           {/* Botón de Admin (Aparece solo si isAdmin es true) */}
           {isAdmin && (
             <button 
-              onClick={() => navigate('/acceso-admin')}
+              onClick={() => navigate('/admin/asesores')}
               className="bg-[#00213b] text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-[#c5a059] transition-colors shadow-sm flex items-center gap-2 mt-2"
             >
               <span className="material-symbols-outlined text-sm">shield_person</span>
