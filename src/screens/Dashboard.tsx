@@ -1,14 +1,57 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
+
+// Definimos la estructura de los datos que esperamos de Firebase
+interface VisitaData {
+  clienteNombre: string;
+  ubicacion: string;
+  mapsUrl: string;
+}
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { idVisita } = useParams();
 
-  // Datos de contexto para la propiedad en Veracruz
-  const nombreCliente = "Cliente"; 
-  const nombrePropiedad = "Jardines del Virginia";
+  // Memoria y estado de carga
+  const [visita, setVisita] = useState<VisitaData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Vamos a buscar los datos a Firebase en cuanto carga la pantalla
+  useEffect(() => {
+    const fetchVisita = async () => {
+      if (!idVisita) return;
+      try {
+        const docRef = doc(db, 'visitas', idVisita);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setVisita(docSnap.data() as VisitaData);
+        }
+      } catch (error) {
+        console.error("Error al cargar el dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisita();
+  }, [idVisita]);
+
+  // Pantalla de carga suave mientras trae los datos
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+         <div className="w-12 h-12 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Datos dinámicos (Si por alguna razón falta un dato, ponemos uno por defecto)
+  const nombreCliente = visita?.clienteNombre || "Cliente VIP"; 
+  const nombrePropiedad = visita?.ubicacion || "Propiedad Seleccionada";
+  const linkMapa = visita?.mapsUrl || "https://maps.google.com/?q=Veracruz";
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -21,14 +64,16 @@ export const Dashboard = () => {
 
       <main className="p-4 space-y-6 max-w-md mx-auto w-full">
         
-        {/* Card de Bienvenida Personalizada */}
+        {/* Card de Bienvenida Personalizada (AHORA DINÁMICA) */}
         <div className="bg-[#00213b] rounded-3xl p-6 text-white shadow-lg flex items-center gap-4">
           <div className="bg-white p-2 rounded-2xl flex-shrink-0">
             <img src="/logo.png" alt="Tu Conexión Inmobiliaria" className="w-10 h-10 object-contain" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-white leading-tight">¡Hola, {nombreCliente}!</h2>
-            <p className="opacity-70 text-[10px] uppercase tracking-widest font-bold">{nombrePropiedad}</p>
+            <p className="opacity-70 text-[10px] uppercase tracking-widest font-bold truncate max-w-[200px]">
+              {nombrePropiedad}
+            </p>
           </div>
         </div>
 
@@ -36,7 +81,7 @@ export const Dashboard = () => {
         <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-3 px-1">
             <h3 className="font-bold text-[#00213b] text-[10px] uppercase tracking-widest">Ubicación y Entorno</h3>
-            <span className="text-[#C5A059] text-[9px] font-black uppercase tracking-tighter">Boca del Río, Ver.</span>
+            <span className="text-[#C5A059] text-[9px] font-black uppercase tracking-tighter">Veracruz / Boca del Río</span>
           </div>
           
           <div className="aspect-video bg-gray-200 rounded-2xl overflow-hidden mb-4 shadow-inner border border-gray-50">
@@ -50,8 +95,9 @@ export const Dashboard = () => {
             />
           </div>
 
+          {/* BOTÓN HACIA EL MAPA REAL DEL CLIENTE */}
           <a 
-            href="https://maps.google.com" 
+            href={linkMapa} 
             target="_blank" 
             rel="noreferrer"
             className="w-full flex items-center justify-center gap-2 bg-[#C5A059] text-white py-4 rounded-2xl font-bold text-sm shadow-md active:scale-95 transition-all"
@@ -59,7 +105,9 @@ export const Dashboard = () => {
             <span className="material-symbols-outlined text-lg">near_me</span>
             VER RUTA EN GOOGLE MAPS
           </a>
-        </div>{/* NUEVO BOTÓN DE SIGUIENTE PASO: INICIAR VISITA */}
+        </div>
+
+        {/* BOTÓN DE SIGUIENTE PASO: INICIAR VISITA */}
         <button 
           onClick={() => navigate(`/iniciar-visita/${idVisita}`)}
           className="w-full mt-4 bg-[#00213b] text-white py-5 rounded-2xl font-black text-[13px] md:text-base uppercase tracking-widest shadow-[0_10px_20px_rgba(0,33,59,0.2)] flex justify-center items-center gap-3 active:scale-95 transition-all border border-[#00335c]"
@@ -68,10 +116,9 @@ export const Dashboard = () => {
           <span className="material-symbols-outlined text-xl">arrow_forward</span>
         </button>
 
-        {/* Módulos de Herramientas de Decisión (LISTA COMPLETA) */}
+        {/* Módulos de Herramientas de Decisión (LISTA COMPLETA INTACTA) */}
         <div className="grid grid-cols-2 gap-4">
           {[
-          
             { title: 'La Zona', icon: 'explore', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
             { title: 'Galería', icon: 'photo_library', color: 'bg-purple-600', route: `/galeria/${idVisita}` },
             { title: 'Diseño IA', icon: 'auto_awesome', color: 'bg-orange-500', route: `/diseno-ia/${idVisita}` },
