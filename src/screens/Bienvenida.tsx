@@ -8,12 +8,11 @@ interface VisitaData {
   clienteNombre: string;
   asesorNombre: string;
   propiedadUrl: string;
-  // Agregaremos más campos conforme los necesitemos
 }
 
 export const Bienvenida = () => {
-  // 1. Extraemos el ID de la URL
-  const { id } = useParams();
+  // 1. Extraemos el ID de la URL usando el nombre exacto de tu App.tsx
+  const { idVisita } = useParams();
   const navigate = useNavigate();
 
   // 2. Memoria de la pantalla
@@ -24,14 +23,16 @@ export const Bienvenida = () => {
   // 3. El buscador: Va a Firebase en cuanto la pantalla carga
   useEffect(() => {
     const fetchVisita = async () => {
-      if (!id) {
+      // Usamos idVisita
+      if (!idVisita) {
         setError('Enlace no válido');
         setLoading(false);
         return;
       }
 
       try {
-        const docRef = doc(db, 'visitas', id);
+        // Buscamos el documento con idVisita
+        const docRef = doc(db, 'visitas', idVisita);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -48,7 +49,7 @@ export const Bienvenida = () => {
     };
 
     fetchVisita();
-  }, [id]);
+  }, [idVisita]); // Actualizado aquí también
 
   // Pantalla de Carga
   if (loading) {
@@ -108,9 +109,9 @@ export const Bienvenida = () => {
             Tu asesor <strong className="text-[#00213b]">{visita.asesorNombre}</strong> ha preparado este portal exclusivo para tu próxima visita. Aquí encontrarás todos los detalles de la propiedad, la ruta interactiva y herramientas de diseño.
           </p>
 
-          {/* Botón para entrar al Dashboard (Pasamos el ID) */}
+          {/* Botón para entrar al Dashboard (Usando idVisita) */}
           <button 
-            onClick={() => navigate(`/dashboard/${id}`)}
+            onClick={() => navigate(`/dashboard/${idVisita}`)}
             className="w-full bg-[#00213b] hover:bg-[#00182b] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 group"
           >
             Entrar a mi Portal
