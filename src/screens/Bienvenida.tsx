@@ -138,9 +138,9 @@ export const Bienvenida = () => {
             onClick={() => navigate(`/dashboard/${idVisita}`)}
             className="w-full bg-[#00213b] hover:bg-[#00182b] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 group"
           >
-            Comenzar mi experiencia
+            Ver Ubicación Exacta
             <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
-              arrow_forward
+              location_on
             </span>
           </button>
           
