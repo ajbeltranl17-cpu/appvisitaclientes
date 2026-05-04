@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 
 export type ScreenName = 
   | 'LOGIN'
