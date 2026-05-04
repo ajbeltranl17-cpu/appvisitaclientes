@@ -8,7 +8,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCnqUTfbtKiQIzxwv9NpcSJlvLpXGm90OI",
   authDomain: "tuconexiongratis.firebaseapp.com",
   projectId: "tuconexiongratis",
-  storageBucket: "tuconexiongratis.appspot.com",
+  storageBucket: "tuconexiongratis.firebasestorage.app",
   messagingSenderId: "440980361178",
   appId: "1:440980361178:web:733159d8332a23c6f8fae3"
 };
