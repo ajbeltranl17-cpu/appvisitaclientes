@@ -1,75 +1,117 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrandLogo } from '../components/BrandLogo';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase'; // Asegúrate de que apunte a tu archivo firebase.ts en src
 
 export const AccesoAdmin = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Por ahora, simulamos un inicio de sesión exitoso y vamos directo a agendar
-    navigate('/agendar');
+    setError('');
+    setIsLoading(true);
+
+    try {
+      // 1. El Guardia de Seguridad (Validar credenciales en Firebase Auth)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. El Archivero (Buscar el perfil y el rol en Firestore)
+      const userDoc = await getDoc(doc(db, 'asesores', user.uid));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Guardamos el rol y nombre temporalmente en el navegador para usarlos después
+        localStorage.setItem('userRole', userData.rol);
+        localStorage.setItem('userName', userData.nombre || 'Asesor');
+
+        // 3. Abrir la puerta hacia la ruta correcta en tu App.tsx
+        navigate('/agendar'); 
+      } else {
+        setError('Tu usuario no tiene un perfil asignado en el sistema.');
+        await auth.signOut(); // Lo sacamos si no tiene perfil
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError('Correo o contraseña incorrectos.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="bg-[#1A3651] min-h-screen flex items-center justify-center p-4 font-body relative overflow-hidden">
-      {/* Fondo decorativo */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
-        <div className="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full bg-gradient-to-b from-white to-transparent blur-3xl"></div>
-        <div className="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-t from-[#C5A059] to-transparent blur-3xl"></div>
-      </div>
-
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 md:p-10 relative z-10">
-        <div className="flex flex-col items-center mb-10 text-center">
-          <BrandLogo className="h-16 w-auto mb-4" />
-          <h1 className="font-headline text-2xl font-extrabold text-[#1A3651] tracking-tight uppercase">Portal de Asesores</h1>
-          <p className="text-[#43474d] text-sm mt-2">Inicia sesión para gestionar tus visitas y clientes.</p>
+    <div className="min-h-screen bg-[#2a3c53] flex items-center justify-center p-4 font-sans">
+      <div className="bg-white rounded-3xl w-full max-w-md p-8 md:p-10 shadow-2xl">
+        
+        {/* Encabezado */}
+        <div className="flex flex-col items-center mb-8">
+          <img src="/logo.png" alt="Tu Conexión Inmobiliaria" className="h-16 mb-4" /> {/* Ajusta la ruta de tu logo */}
+          <h1 className="text-2xl font-black text-[#1A3651] uppercase tracking-wide">Portal de Asesores</h1>
+          <p className="text-[#73777e] text-sm mt-2 text-center">Inicia sesión para gestionar tus visitas y clientes.</p>
         </div>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-5">
+        {/* Formulario */}
+        <form onSubmit={handleLogin} className="space-y-6">
+          
+          {/* Mensaje de Error */}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-medium border border-red-100">
+              {error}
+            </div>
+          )}
+
+          {/* Campo: Correo */}
           <div>
-            <label className="block text-xs font-bold text-[#73777e] uppercase tracking-wider mb-2">Correo Electrónico</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#73777e]">
-                <span className="material-symbols-outlined text-[20px]">mail</span>
-              </span>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-[#1A3651]/70 mb-2">
+              Correo Electrónico
+            </label>
+            <div className="flex items-center gap-3 bg-[#f4f4f2]/50 p-4 rounded-xl border border-[#c3c6ce]/20 focus-within:border-[#C5A059] transition-colors">
+              <span className="material-symbols-outlined text-[#73777e] text-xl">mail</span>
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="asesor@tuconexion.com"
-                className="w-full pl-11 pr-4 py-3 bg-[#f4f4f2] border border-[#c3c6ce] rounded-xl focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-all text-[#1A3651] font-medium"
+                placeholder="asesor@tuconexion.com" 
+                className="bg-transparent w-full outline-none text-[#1A3651] font-medium placeholder:text-[#c3c6ce]/80 text-sm"
                 required
               />
             </div>
           </div>
 
+          {/* Campo: Contraseña */}
           <div>
-            <label className="block text-xs font-bold text-[#73777e] uppercase tracking-wider mb-2">Contraseña</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#73777e]">
-                <span className="material-symbols-outlined text-[20px]">lock</span>
-              </span>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-[#1A3651]/70 mb-2">
+              Contraseña
+            </label>
+            <div className="flex items-center gap-3 bg-[#f4f4f2]/50 p-4 rounded-xl border border-[#c3c6ce]/20 focus-within:border-[#C5A059] transition-colors">
+              <span className="material-symbols-outlined text-[#73777e] text-xl">lock</span>
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-11 pr-4 py-3 bg-[#f4f4f2] border border-[#c3c6ce] rounded-xl focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-all text-[#1A3651] font-medium"
+                placeholder="••••••••" 
+                className="bg-transparent w-full outline-none text-[#1A3651] font-medium placeholder:text-[#c3c6ce]/80 text-sm tracking-widest"
                 required
               />
             </div>
           </div>
 
+          {/* Botón Ingresar */}
           <button 
             type="submit" 
-            className="mt-4 w-full bg-[#C5A059] hover:bg-[#b08d4a] text-white font-headline font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95 flex justify-center items-center gap-2"
+            disabled={isLoading}
+            className="w-full bg-[#C5A059] hover:bg-[#b08d4b] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#C5A059]/30 transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-70"
           >
-            <span>Ingresar al Sistema</span>
-            <span className="material-symbols-outlined text-[20px]">login</span>
+            {isLoading ? 'Verificando...' : 'Ingresar al Sistema'}
+            {!isLoading && <span className="material-symbols-outlined text-xl">login</span>}
           </button>
+
         </form>
       </div>
     </div>
