@@ -11,19 +11,17 @@ interface VisitaData {
 }
 
 export const Bienvenida = () => {
-  // 1. Extraemos el ID de la URL usando el nombre exacto de tu App.tsx
   const { idVisita } = useParams();
   const navigate = useNavigate();
 
-  // 2. Memoria de la pantalla
+  // Memoria de la pantalla
   const [visita, setVisita] = useState<VisitaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 3. El buscador: Va a Firebase en cuanto la pantalla carga
+  // El buscador: Va a Firebase en cuanto la pantalla carga
   useEffect(() => {
     const fetchVisita = async () => {
-      // Usamos idVisita
       if (!idVisita) {
         setError('Enlace no válido');
         setLoading(false);
@@ -31,7 +29,6 @@ export const Bienvenida = () => {
       }
 
       try {
-        // Buscamos el documento con idVisita
         const docRef = doc(db, 'visitas', idVisita);
         const docSnap = await getDoc(docRef);
 
@@ -49,7 +46,7 @@ export const Bienvenida = () => {
     };
 
     fetchVisita();
-  }, [idVisita]); // Actualizado aquí también
+  }, [idVisita]);
 
   // Pantalla de Carga
   if (loading) {
@@ -83,8 +80,8 @@ export const Bienvenida = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-8">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border-t-8 border-t-[#C5A059]">
         
-        {/* Imagen de Portada (Simulada por ahora) */}
-        <div className="h-64 w-full relative">
+        {/* Imagen de Portada */}
+        <div className="h-48 sm:h-56 w-full relative">
           <img 
             src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
             alt="Propiedad" 
@@ -95,26 +92,53 @@ export const Bienvenida = () => {
           
           <div className="absolute bottom-6 left-6 right-6">
             <span className="bg-[#C5A059] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-              Experiencia Privada
+              Tu Visita Inmobiliaria
             </span>
             <h1 className="text-3xl font-black text-white mt-2 leading-tight">
-              Bienvenido,<br/>{visita.clienteNombre}
+              Hola, <br/>{visita.clienteNombre}
             </h1>
           </div>
         </div>
 
-        {/* Contenido del Mensaje */}
-        <div className="p-8 text-center">
-          <p className="text-gray-600 mb-8 text-sm leading-relaxed">
-            Tu asesor <strong className="text-[#00213b]">{visita.asesorNombre}</strong> ha preparado este portal exclusivo para tu próxima visita. Aquí encontrarás todos los detalles de la propiedad, la ruta interactiva y herramientas de diseño.
+        {/* Contenido del Mensaje y Beneficios */}
+        <div className="p-6 sm:p-8">
+          <p className="text-gray-600 mb-6 text-sm leading-relaxed text-center">
+            Tu asesor <strong className="text-[#00213b]">{visita.asesorNombre}</strong> ha preparado este portal exclusivo. Para ver la <strong className="text-[#C5A059]">ubicación exacta en Google Maps</strong> y acceder a tu panel con todos los beneficios, por favor haz clic abajo.
           </p>
 
-          {/* Botón para entrar al Dashboard (Usando idVisita) */}
+          {/* Lista de Beneficios */}
+          <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
+            <h3 className="text-[11px] font-bold text-[#00213b] uppercase tracking-wider mb-4 text-center">¿Qué incluye tu panel?</h3>
+            <ul className="space-y-4">
+              <li className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="material-symbols-outlined text-[#C5A059]">location_on</span>
+                <span className="leading-tight">Ubicación exacta y ruta directa en Google Maps.</span>
+              </li>
+              <li className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="material-symbols-outlined text-[#C5A059]">photo_library</span>
+                <span className="leading-tight">Galería completa de fotos de la propiedad.</span>
+              </li>
+              <li className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="material-symbols-outlined text-[#C5A059]">map</span>
+                <span className="leading-tight">Análisis de la zona (escuelas, bancos, restaurantes).</span>
+              </li>
+              <li className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="material-symbols-outlined text-[#C5A059]">grid_view</span>
+                <span className="leading-tight">Matriz comparativa contra otras opciones.</span>
+              </li>
+              <li className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="material-symbols-outlined text-[#C5A059]">calculate</span>
+                <span className="leading-tight">Calculadoras financieras (Hipoteca y Plusvalía).</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Botón para entrar al Dashboard */}
           <button 
             onClick={() => navigate(`/dashboard/${idVisita}`)}
             className="w-full bg-[#00213b] hover:bg-[#00182b] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 group"
           >
-            Entrar a mi Portal
+            Comenzar mi experiencia
             <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
               arrow_forward
             </span>
