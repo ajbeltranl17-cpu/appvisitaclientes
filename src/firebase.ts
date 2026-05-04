@@ -13,10 +13,9 @@ const firebaseConfig = {
   appId: "1:440980361178:web:733159d8332a23c6f8fae3"
 };
 
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
+// 2. EL SEGURO ANTICHOQUES: Si no hay apps encendidas, enciéndela. Si ya hay una, úsala.
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Inicializar y exportar los servicios que usaremos en la app
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const auth = getAuth(app);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../services/firebaseConfig';
+import { db } from '../firebase';
 import { BrandLogo } from '../components/BrandLogo';
 
 interface Asesor {
