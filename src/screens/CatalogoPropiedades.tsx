@@ -1,14 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const CatalogoPropiedades = () => {
   const { idVisita } = useParams();
   const navigate = useNavigate();
 
-  // Estado para la barra flotante de comparación (inicia con 1 pre-seleccionado para la demo)
+  // Estados
   const [seleccionados, setSeleccionados] = useState<string[]>(['1']);
+  const [buscando, setBuscando] = useState(true);
+  const [deseosCliente, setDeseosCliente] = useState<any>(null);
 
+  // Conexión a Firebase para extraer los deseos del cliente
+  useEffect(() => {
+    const fetchDeseosYBuscar = async () => {
+      if (!idVisita) return;
+      try {
+        const docRef = doc(db, 'visitas', idVisita);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.deseos) {
+            setDeseosCliente(data.deseos);
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar los deseos para el catálogo:", error);
+      } finally {
+        // Simulamos el tiempo de "Scraping" o búsqueda con IA en tu sitio web (3 segundos)
+        setTimeout(() => setBuscando(false), 3000);
+      }
+    };
+
+    fetchDeseosYBuscar();
+  }, [idVisita]);
+
+  // Inventario Base (Fase 1: Tubería. Fase 2: Llegarán dinámicamente de tu sitio web)
   const propiedades = [
     {
       id: '1',
@@ -63,9 +93,7 @@ export const CatalogoPropiedades = () => {
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 
-  // FUNCIÓN DE WHATSAPP PREGRABADO POR PROPIEDAD
   const contactarAsesor = (propiedad: any) => {
-    // Lo dejamos vacío para probar el mensaje pregrabado eligiendo un contacto
     const numeroAsesor = ""; 
     const mensaje = `¡Hola! Estoy navegando por mi catálogo personalizado y me interesó mucho la propiedad: *${propiedad.titulo}* (${formatearMoneda(propiedad.precio)}). ¿Me podrías dar más detalles?`;
     
@@ -75,6 +103,23 @@ export const CatalogoPropiedades = () => {
       
     window.open(url, '_blank');
   };
+
+  // Pantalla de Carga Simulando la Búsqueda Inteligente
+  if (buscando) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center font-sans">
+         <div className="w-20 h-20 relative flex items-center justify-center mb-6">
+            <div className="absolute inset-0 border-4 border-[#C5A059]/20 rounded-full animate-ping"></div>
+            <div className="absolute inset-2 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin"></div>
+            <span className="material-symbols-outlined text-[#00213b] text-3xl animate-pulse">travel_explore</span>
+         </div>
+         <h2 className="text-xl font-black text-[#00213b] mb-2 uppercase tracking-wide">Analizando Inventario</h2>
+         <p className="text-gray-500 text-sm max-w-[280px]">
+           Buscando propiedades en <strong className="text-[#C5A059]">{deseosCliente?.ubicacion || 'la zona'}</strong> que coincidan con tu presupuesto de <strong className="text-[#C5A059]">{deseosCliente ? formatearMoneda(deseosCliente.presupuesto) : 'tu perfil'}</strong>...
+         </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans pb-32">
@@ -88,6 +133,7 @@ export const CatalogoPropiedades = () => {
       <main className="p-4 max-w-5xl mx-auto w-full space-y-6">
         
         <section className="px-2">
+          <span className="text-[#C5A059] font-black uppercase text-[10px] tracking-[0.3em]">Resultados de tuconexioninmobiliaria.com</span>
           <h1 className="text-3xl font-black text-[#00213b] mt-1">Sugerencias para ti</h1>
           <p className="text-gray-500 text-sm mt-2">Basado en tus preferencias, hemos filtrado estas residencias. Selecciona hasta 3 para compararlas detalle a detalle.</p>
         </section>
@@ -106,7 +152,7 @@ export const CatalogoPropiedades = () => {
                   {prop.match && (
                     <div className="absolute top-4 left-4 bg-[#C5A059] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
                       <span className="material-symbols-outlined text-xs">star</span>
-                      Match
+                      Match Ideal
                     </div>
                   )}
                   
@@ -173,7 +219,7 @@ export const CatalogoPropiedades = () => {
         </div>
       </main>
 
-      {/* Barra Flotante Inferior de Comparativa (Aparece sólo si hay selección) */}
+      {/* Barra Flotante Inferior de Comparativa */}
       {seleccionados.length > 0 && (
         <div className="fixed bottom-6 left-0 w-full px-4 z-50 flex justify-center pointer-events-none">
           <div className="bg-[#00213b] text-white rounded-[2rem] p-4 shadow-[0_10px_40px_rgba(0,33,59,0.3)] flex items-center justify-between w-full max-w-sm pointer-events-auto border border-white/10">
