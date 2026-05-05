@@ -1,24 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
+
+interface VisitaData {
+  precioPropiedad?: number;
+  ubicacion?: string;
+}
 
 export const CalculadoraPlusvalia = () => {
   const { idVisita } = useParams();
   const navigate = useNavigate();
 
-  // Datos Base (En Fase de Backend, estos llegarán de la extracción de las URLs por IA)
+  // Estados de carga e IA
+  const [loading, setLoading] = useState(true);
+  const [analizandoIA, setAnalizandoIA] = useState(true);
+
+  // Datos Base
   const [precioOriginal, setPrecioOriginal] = useState(3400000);
-  const [zonaAnalizada, setZonaAnalizada] = useState('Jardines del Virginia, Boca del Río');
+  const [zonaAnalizada, setZonaAnalizada] = useState('Veracruz / Boca del Río');
   
   const [tasaInflacion, setTasaInflacion] = useState(4.5); 
-  const [anos, setAnos] = useState(5); // Ajustado a 5 años por defecto para impacto a mediano plazo
+  const [anos, setAnos] = useState(5); 
   const [estadoPropiedad, setEstadoPropiedad] = useState('Entrega Inmediata');
 
   const [valorFuturo, setValorFuturo] = useState(0);
   const [valorInflacion, setValorInflacion] = useState(0);
 
-  // 1. Tasa base fija que vendrá de la URL en el Backend
+  // 1. Tasa base fija (Fase 1: Tubería conectada, Fase 2: Vendrá del backend)
   const tasaBaseZona = 7.5; 
+
+  // Conexión a Firebase para extraer datos del cliente
+  useEffect(() => {
+    const fetchVisita = async () => {
+      if (!idVisita) return;
+      try {
+        const docRef = doc(db, 'visitas', idVisita);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data() as VisitaData;
+          if (data.precioPropiedad) {
+            setPrecioOriginal(Number(data.precioPropiedad));
+          }
+          if (data.ubicacion) {
+            setZonaAnalizada(data.ubicacion);
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar datos de plusvalía:", error);
+      } finally {
+        setLoading(false);
+        // Simulamos la evaluación de mercado de la IA (2.5 segundos)
+        setTimeout(() => setAnalizandoIA(false), 2500);
+      }
+    };
+
+    fetchVisita();
+  }, [idVisita]);
 
   // Lógica de ajuste dinámico integral (Zona + Estado + Tiempo)
   const obtenerTasaAjustada = () => {
@@ -29,8 +69,6 @@ export const CalculadoraPlusvalia = () => {
     if (estadoPropiedad === 'Seminuevo') tasa -= 1.5; // Ajuste por depreciación física
 
     // 3. Ajuste por horizonte de tiempo
-    // Lógica corregida: A mayor número de años, mayor tasa de plusvalía.
-    // Usamos 5 años como punto base.
     const ajusteTiempo = (anos - 5) * 0.1; 
     tasa += ajusteTiempo;
 
@@ -51,6 +89,23 @@ export const CalculadoraPlusvalia = () => {
 
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
+
+  // Pantalla de Carga de la IA
+  if (loading || analizandoIA) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center font-sans">
+         <div className="w-20 h-20 relative flex items-center justify-center mb-6">
+            <div className="absolute inset-0 border-4 border-[#C5A059]/20 rounded-full animate-ping"></div>
+            <div className="absolute inset-2 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin"></div>
+            <span className="material-symbols-outlined text-[#00213b] text-3xl animate-pulse">trending_up</span>
+         </div>
+         <h2 className="text-xl font-black text-[#00213b] mb-2 uppercase tracking-wide">Proyectando Plusvalía</h2>
+         <p className="text-gray-500 text-sm max-w-[280px]">
+           Nuestra IA está calculando el crecimiento histórico y proyectado para <strong className="text-[#C5A059]">{zonaAnalizada}</strong>...
+         </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -95,7 +150,7 @@ export const CalculadoraPlusvalia = () => {
                     <p className="text-sm font-black">{formatearMoneda(precioOriginal)}</p>
                  </div>
               </div>
-              <div className="bg-green-500/20 border border-green-500/50 px-2 py-1 rounded-md flex items-center gap-1">
+              <div className="bg-green-500/20 border border-green-500/50 px-2 py-1 rounded-md flex items-center gap-1 z-10">
                  <span className="material-symbols-outlined text-green-400 text-[10px]">verified</span>
                  <span className="text-[8px] uppercase tracking-wider font-bold text-green-400">Datos Reales</span>
               </div>
@@ -113,7 +168,7 @@ export const CalculadoraPlusvalia = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-[10px] font-bold uppercase">
-                <span className="text-green-600">Plusvalía Inmobiliaria ({tasaPlusvalia}%)</span>
+                <span className="text-green-600">Plusvalía Inmobiliaria ({tasaPlusvalia.toFixed(1)}%)</span>
                 <span className="text-gray-900">{formatearMoneda(valorFuturo)}</span>
               </div>
               <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
@@ -123,7 +178,7 @@ export const CalculadoraPlusvalia = () => {
 
             <div className="space-y-2">
               <div className="flex justify-between text-[10px] font-bold uppercase">
-                <span className="text-orange-500">Inflación Estimada ({tasaInflacion}%)</span>
+                <span className="text-orange-500">Inflación Estimada ({tasaInflacion.toFixed(1)}%)</span>
                 <span className="text-gray-500">{formatearMoneda(valorInflacion)}</span>
               </div>
               <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden">
@@ -179,7 +234,7 @@ export const CalculadoraPlusvalia = () => {
                 <span className="material-symbols-outlined text-[14px] text-[#C5A059]" title="Dato verificado por análisis de mercado">verified</span>
               </label>
               <div className="text-right">
-                <span className="text-xl font-black text-[#00213b]">{tasaPlusvalia}%</span>
+                <span className="text-xl font-black text-[#00213b]">{tasaPlusvalia.toFixed(1)}%</span>
                 <span className="text-[8px] block text-gray-400 font-bold uppercase -mt-1">Anual</span>
               </div>
             </div>
@@ -198,7 +253,7 @@ export const CalculadoraPlusvalia = () => {
           </div>
         </div>
 
-        {/* NUEVO BOTÓN DE SIGUIENTE PASO: GALERÍA */}
+        {/* BOTÓN DE SIGUIENTE PASO: GALERÍA */}
         <div className="mt-8 pb-8 px-4">
           <button 
             onClick={() => navigate(`/galeria/${idVisita}`)}
