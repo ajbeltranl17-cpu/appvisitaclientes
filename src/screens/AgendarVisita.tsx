@@ -57,6 +57,20 @@ export const AgendarVisita = () => {
         fechaCreacion: serverTimestamp()
       });
 
+      // ---> INICIO DE LA MAGIA EN LA NUBE <---
+      // Disparamos nuestra Serverless Function de Vercel en segundo plano (Fire and Forget)
+      fetch('/api/procesar-visita', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitaId: docRef.id,
+          propiedadUrl: propiedadUrl,
+          mapsUrl: mapsUrl,
+          ubicacionTexto: ubicacion
+        })
+      }).catch(err => console.error("Error al detonar el motor en Vercel:", err));
+      // ---> FIN DE LA MAGIA EN LA NUBE <---
+
       // B. Construimos la URL mágica con el ID real
       const linkInvitacion = `${window.location.origin}/bienvenida/${docRef.id}`;
       
