@@ -29,8 +29,16 @@ export const SwipePareja = () => {
     setMatches([]);
   };
 
-  const compartirWhatsApp = () => {
-    const texto = `¡Hola! Acabamos de hacer Match en ${matches.length} características para nuestro próximo departamento en Jardines del Virginia.\n\nNuestras prioridades conjuntas son:\n${matches.map(m => `✅ ${m}`).join('\n')}\n\n¡Creo que esta es la opción ideal!`;
+  // NUEVO: Función para invitar a jugar antes de terminar
+  const compartirJuego = () => {
+    const urlActual = window.location.href;
+    const texto = `¡Hola! Ayúdame a decidir qué características son indispensables para nuestro próximo departamento.\n\nEntra a este enlace, haz "Swipe" en lo que te guste y veamos en qué hacemos Match 🏠❤️:\n${urlActual}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+  };
+
+  // Función original para compartir resultados al final
+  const compartirResultados = () => {
+    const texto = `¡Hola! Terminé de jugar y estas son mis prioridades para nuestro próximo departamento en Veracruz:\n\n${matches.map(m => `✅ ${m}`).join('\n')}\n\n¡Juega tú también para ver en qué coincidimos!`;
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
   };
 
@@ -38,7 +46,6 @@ export const SwipePareja = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-hidden">
-      {/* Encabezado ajustado hacia Mis Deseos */}
       <EncabezadoGlobal 
         rutaAnterior={`/diseno-ia/${idVisita}`}
         textoAnterior="Diseño IA"
@@ -48,10 +55,23 @@ export const SwipePareja = () => {
 
       <main className="flex-1 flex flex-col p-4 max-w-md mx-auto w-full relative">
         
-        <section className="text-center mb-6">
+        <section className="text-center mb-6 relative">
           <span className="text-[#C5A059] font-black uppercase text-[10px] tracking-[0.3em]">Alineación de Intereses</span>
           <h1 className="text-3xl font-black text-[#00213b] mt-1">¿Hacemos Match?</h1>
           <p className="text-gray-500 text-xs mt-2 px-4">Descubre si tú y tu pareja buscan lo mismo en este espacio.</p>
+          
+          {/* NUEVO BOTÓN DE INVITACIÓN RÁPIDA */}
+          {!mostrarResultados && (
+            <button 
+              onClick={compartirJuego}
+              className="mx-auto mt-4 bg-green-50 text-green-600 border border-green-200 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 shadow-sm active:scale-95 transition-transform"
+            >
+              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                <path d="M12.031 0C5.385 0 0 5.386 0 12.033c0 2.128.553 4.205 1.604 6.035L.145 24l6.113-1.605c1.764.966 3.754 1.476 5.77 1.476 6.647 0 12.034-5.386 12.034-12.034C24 5.386 18.678 0 12.031 0z"/>
+              </svg>
+              Enviar link a mi pareja
+            </button>
+          )}
         </section>
 
         <div className="flex-1 relative flex items-center justify-center min-h-[420px]">
@@ -96,11 +116,11 @@ export const SwipePareja = () => {
                 <span className="material-symbols-outlined text-4xl text-[#C5A059]">celebration</span>
               </div>
               <h2 className="text-2xl font-black text-[#00213b] mb-1">¡Completado!</h2>
-              <p className="text-gray-500 text-xs mb-4">Hicieron match en {matches.length} de {tarjetas.length} características clave.</p>
+              <p className="text-gray-500 text-xs mb-4">Seleccionaste {matches.length} de {tarjetas.length} características clave.</p>
               
               {matches.length > 0 && (
                 <div className="text-left bg-gray-50 p-4 rounded-2xl mb-6">
-                  <h3 className="font-bold text-[#00213b] text-[10px] uppercase tracking-widest mb-3">Tus Prioridades Confirmadas:</h3>
+                  <h3 className="font-bold text-[#00213b] text-[10px] uppercase tracking-widest mb-3">Tus Prioridades:</h3>
                   <ul className="space-y-2">
                     {matches.map((match, idx) => (
                       <li key={idx} className="flex items-center gap-2 text-sm text-gray-700 font-medium">
@@ -112,9 +132,7 @@ export const SwipePareja = () => {
                 </div>
               )}
 
-              {/* AQUÍ ESTÁN LOS 3 BOTONES EN ORDEN */}
               <div className="space-y-3 mt-auto">
-                {/* Botón 1: Continuar a Mis Deseos */}
                 <button 
                   onClick={() => navigate(`/mis-deseos/${idVisita}`)}
                   className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-transform"
@@ -122,18 +140,16 @@ export const SwipePareja = () => {
                   Continuar a Mis Deseos
                 </button>
 
-                {/* Botón 2: Compartir en WhatsApp */}
                 <button 
-                  onClick={compartirWhatsApp}
+                  onClick={compartirResultados}
                   className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M12.031 0C5.385 0 0 5.386 0 12.033c0 2.128.553 4.205 1.604 6.035L.145 24l6.113-1.605c1.764.966 3.754 1.476 5.77 1.476 6.647 0 12.034-5.386 12.034-12.034C24 5.386 18.678 0 12.031 0zm0 21.894c-1.802 0-3.565-.484-5.112-1.404l-.367-.218-3.805.998.998-3.71-.238-.38A9.873 9.873 0 0 1 2.051 12.033c0-5.513 4.487-10 10-10 5.513 0 10 4.487 10 10s-4.487 10-9.999 10zm5.485-7.493c-.302-.15-1.785-.88-2.062-.98-.278-.1-.481-.15-.683.15-.203.301-.781.98-.957 1.18-.175.201-.35.226-.652.076-1.528-.758-2.613-1.442-3.626-3.15-.176-.297-.018-.458.133-.608.135-.135.302-.352.453-.528.15-.176.202-.301.302-.502.1-.201.05-.377-.025-.527-.075-.15-.683-1.645-.935-2.253-.246-.593-.497-.512-.683-.521-.175-.009-.376-.009-.578-.009-.202 0-.528.075-.805.376-.277.301-1.056 1.031-1.056 2.513 0 1.482 1.082 2.915 1.233 3.116.15.201 2.126 3.245 5.15 4.547 2.08 .894 2.87 .974 3.938.82 1.156-.168 3.565-1.457 4.067-2.865.503-1.408.503-2.614.353-2.865-.151-.252-.553-.402-.855-.553z"/>
                   </svg>
-                  Compartir Resultados
+                  Compartir mis resultados
                 </button>
                 
-                {/* Botón 3: Reiniciar */}
                 <button 
                   onClick={reinciar}
                   className="w-full bg-white text-[#00213b] border border-gray-200 py-4 rounded-2xl font-bold active:bg-gray-50 transition-colors"
@@ -141,11 +157,10 @@ export const SwipePareja = () => {
                   Volver a jugar
                 </button>
               </div>
-
             </div>
           )}
         </div>
-        {/* NUEVO BOTÓN DE SIGUIENTE PASO: MIS DESEOS */}
+
         <div className="mt-8 pb-8 px-4">
           <button 
             onClick={() => navigate(`/mis-deseos/${idVisita}`)}
