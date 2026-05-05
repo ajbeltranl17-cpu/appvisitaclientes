@@ -4,11 +4,13 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
-// Definimos la estructura de los datos que esperamos de Firebase
+// Actualizamos la estructura para leer todo lo que ya guardamos en la Fase 1
 interface VisitaData {
-  clienteNombre: string;
-  ubicacion: string;
-  mapsUrl: string;
+  clienteNombre?: string;
+  ubicacion?: string;
+  mapsUrl?: string;
+  fotosCliente?: string[];
+  deseos?: any;
 }
 
 export const Dashboard = () => {
@@ -48,28 +50,32 @@ export const Dashboard = () => {
     );
   }
 
-  // Datos dinámicos (Si por alguna razón falta un dato, ponemos uno por defecto)
+  // Datos dinámicos
   const nombreCliente = visita?.clienteNombre || "Cliente VIP"; 
   const nombrePropiedad = visita?.ubicacion || "Propiedad Seleccionada";
   const linkMapa = visita?.mapsUrl || "https://maps.google.com/?q=Veracruz";
 
+  // Validaciones para las insignias de progreso
+  const tieneFotos = visita?.fotosCliente && visita.fotosCliente.length > 0;
+  const tieneDeseos = visita?.deseos !== undefined;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Navegación superior corporativa */}
       <EncabezadoGlobal 
         rutaSiguiente={`/iniciar-visita/${idVisita}`} 
         iconoSiguiente="directions_walk" 
         textoSiguiente="Iniciar Visita" 
       />
 
-      <main className="p-4 space-y-6 max-w-md mx-auto w-full">
+      <main className="p-4 space-y-6 max-w-md mx-auto w-full pb-10">
         
-        {/* Card de Bienvenida Personalizada (AHORA DINÁMICA) */}
-        <div className="bg-[#00213b] rounded-3xl p-6 text-white shadow-lg flex items-center gap-4">
-          <div className="bg-white p-2 rounded-2xl flex-shrink-0">
+        {/* Card de Bienvenida Personalizada */}
+        <div className="bg-[#00213b] rounded-3xl p-6 text-white shadow-lg flex items-center gap-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#C5A059]/10 rounded-full -mr-16 -mt-16 pointer-events-none"></div>
+          <div className="bg-white p-2 rounded-2xl flex-shrink-0 z-10">
             <img src="/logo.png" alt="Tu Conexión Inmobiliaria" className="w-10 h-10 object-contain" />
           </div>
-          <div>
+          <div className="z-10">
             <h2 className="text-xl font-bold text-white leading-tight">¡Hola, {nombreCliente}!</h2>
             <p className="opacity-70 text-[10px] uppercase tracking-widest font-bold truncate max-w-[200px]">
               {nombrePropiedad}
@@ -95,7 +101,6 @@ export const Dashboard = () => {
             />
           </div>
 
-          {/* BOTÓN HACIA EL MAPA REAL DEL CLIENTE */}
           <a 
             href={linkMapa} 
             target="_blank" 
@@ -116,14 +121,14 @@ export const Dashboard = () => {
           <span className="material-symbols-outlined text-xl">arrow_forward</span>
         </button>
 
-        {/* Módulos de Herramientas de Decisión (LISTA COMPLETA INTACTA) */}
+        {/* Módulos de Herramientas de Decisión */}
         <div className="grid grid-cols-2 gap-4">
           {[
             { title: 'La Zona', icon: 'explore', color: 'bg-teal-600', route: `/analisis/${idVisita}` },
-            { title: 'Galería', icon: 'photo_library', color: 'bg-purple-600', route: `/galeria/${idVisita}` },
+            { title: 'Galería', icon: 'photo_library', color: 'bg-purple-600', route: `/galeria/${idVisita}`, badge: tieneFotos },
             { title: 'Diseño IA', icon: 'auto_awesome', color: 'bg-orange-500', route: `/diseno-ia/${idVisita}` },
             { title: 'Swipe Pareja', icon: 'swipe', color: 'bg-pink-500', route: `/swipe/${idVisita}` },
-            { title: 'Mis Deseos', icon: 'favorite', color: 'bg-red-500', route: `/mis-deseos/${idVisita}` },
+            { title: 'Mis Deseos', icon: 'favorite', color: 'bg-red-500', route: `/mis-deseos/${idVisita}`, badge: tieneDeseos },
             { title: 'Catálogo', icon: 'account_balance', color: 'bg-slate-700', route: `/catalogo/${idVisita}` },
             { title: 'Comparar', icon: 'balance', color: 'bg-amber-600', route: `/matriz/${idVisita}` },
             { title: 'Plusvalía', icon: 'trending_up', color: 'bg-indigo-600', route: `/plusvalia/${idVisita}` },
@@ -132,8 +137,13 @@ export const Dashboard = () => {
             <button
               key={idx}
               onClick={() => navigate(item.route)}
-              className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-[#C5A059]/30"
+              className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-[#C5A059]/30 relative"
             >
+              {/* Insignia de estado (Badge) si hay datos completados */}
+              {item.badge && (
+                <div className="absolute top-3 right-3 w-3 h-3 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
+              )}
+              
               <div className={`${item.color} p-3 rounded-2xl text-white shadow-sm`}>
                 <span className="material-symbols-outlined text-2xl">{item.icon}</span>
               </div>
