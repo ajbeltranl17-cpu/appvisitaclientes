@@ -1,17 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
+
+// Definimos la estructura esperada
+interface VisitaData {
+  precioPropiedad?: number; // Por si en el futuro lo guardas desde el formulario
+  urlPropiedad?: string;
+}
 
 export const CalculadoraHipotecaria = () => {
   const { idVisita } = useParams();
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
+  // Estado de carga inicial
+  const [loading, setLoading] = useState(true);
+
   // Estados iniciales basados en el perfil de Jardines del Virginia
   const [precio, setPrecio] = useState(3400000);
   const [enganchePorcentaje, setEnganchePorcentaje] = useState(20);
   const [plazoAnos, setPlazoAnos] = useState(20);
-  const [tasaAnual, setTasaAnual] = useState(10.5); // Ahora ajustable con precisión
+  const [tasaAnual, setTasaAnual] = useState(10.5);
 
   const [pagoMensual, setPagoMensual] = useState(0);
+
+  // Conexión a Firebase (Fase 1: Tubería)
+  useEffect(() => {
+    const fetchVisita = async () => {
+      if (!idVisita) return;
+      try {
+        const docRef = doc(db, 'visitas', idVisita);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data() as VisitaData;
+          // Si ya existe un precio en la base de datos, lo precargamos.
+          // Si no, se queda el de 3.4M por defecto hasta que implementemos la extracción (Fase 2)
+          if (data.precioPropiedad) {
+            setPrecio(Number(data.precioPropiedad));
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar datos financieros:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisita();
+  }, [idVisita]);
 
   // Cálculo financiero dinámico
   useEffect(() => {
@@ -28,6 +66,14 @@ const navigate = useNavigate();
 
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(valor);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+         <div className="w-12 h-12 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -92,7 +138,7 @@ const navigate = useNavigate();
             />
           </div>
 
-          {/* Tasa de Interés (NUEVO APARTADO) */}
+          {/* Tasa de Interés */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest">Tasa de Interés Anual</label>
@@ -133,7 +179,8 @@ const navigate = useNavigate();
             *Cálculo informativo sujeto a aprobación de crédito. Basado en una tasa personalizada del {tasaAnual.toFixed(1)}%.
           </p>
         </div>
-{/* NUEVO BOTÓN DE SIGUIENTE PASO: CALCULAR PLUSVALÍA */}
+
+        {/* BOTÓN DE SIGUIENTE PASO: CALCULAR PLUSVALÍA */}
         <div className="mt-8 pb-8 px-4">
           <button 
             onClick={() => navigate(`/plusvalia/${idVisita}`)}
