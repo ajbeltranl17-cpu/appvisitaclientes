@@ -128,10 +128,10 @@ export const GaleriaVisita = () => {
                 {/* Botón Flotante de Diseño IA (Varita Mágica) */}
                 <div className="absolute top-2 right-2 z-10">
                   <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/diseno-ia/${idVisita}`);
-                    }}
+                   onClick={(e) => {
+  e.stopPropagation();
+  navigate(`/diseno-ia/${idVisita}`, { state: { fotoSeleccionada: url } });
+}}
                     className="bg-[#C5A059] text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-transform"
                   >
                     <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
