@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const MatrizComparativa = () => {
   const { idVisita } = useParams();
   const navigate = useNavigate();
 
-  // En Fase Backend, estos datos llegarán automáticamente filtrados desde la pantalla del Catálogo.
-  const [propiedadesAComparar] = useState([
+  const [cargando, setCargando] = useState(true);
+
+  // En Fase 2, estos datos llegarán automáticamente filtrados desde la pantalla del Catálogo en Firebase.
+  const [propiedadesAComparar, setPropiedadesAComparar] = useState([
     {
       id: '1',
       titulo: 'Torre Alvento, PH',
@@ -44,12 +48,29 @@ export const MatrizComparativa = () => {
     }
   ]);
 
+  // Conexión a Firebase para preparar la llegada de las propiedades seleccionadas
+  useEffect(() => {
+    const prepararComparativa = async () => {
+      if (!idVisita) return;
+      try {
+        const docRef = doc(db, 'visitas', idVisita);
+        const docSnap = await getDoc(docRef);
+        // Aquí en la Fase 2 leeremos docSnap.data().seleccionadas
+      } catch (error) {
+        console.error("Error al cargar la comparativa:", error);
+      } finally {
+        // Breve simulación de carga para el efecto visual
+        setTimeout(() => setCargando(false), 1500);
+      }
+    };
+
+    prepararComparativa();
+  }, [idVisita]);
+
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 
   const contactarAsesor = (prop: any) => {
-    // Si lo dejamos vacío (""), WhatsApp te preguntará a quién enviarlo para que puedas probar el texto.
-    // Si quieres que te llegue a ti, pon tu número así: "522291234567"
     const numeroAsesor = ""; 
     const mensaje = `¡Hola! Estuve analizando la Matriz Comparativa y me interesa agendar una visita para: *${prop.titulo}*.`;
     
@@ -59,6 +80,15 @@ export const MatrizComparativa = () => {
       
     window.open(url, '_blank');
   };
+
+  if (cargando) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center font-sans">
+         <div className="w-16 h-16 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin mb-4"></div>
+         <h2 className="text-lg font-black text-[#00213b] uppercase tracking-widest">Alineando Datos...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-hidden">
@@ -76,16 +106,15 @@ export const MatrizComparativa = () => {
           <p className="text-gray-500 text-sm mt-2">Análisis detallado de opciones de inversión seleccionadas para tu perfil.</p>
         </section>
 
-        {/* CONTENEDOR DE TABLA: Se añadió scroll-pl-[90px] para que respete la columna fija al soltar el dedo */}
         <div className="w-full overflow-x-auto pb-8 snap-x snap-mandatory scroll-pl-[90px] md:scroll-pl-40 scroll-smooth">
           <div className="min-w-max px-2 md:px-6">
             <table className="w-full border-separate" style={{ borderSpacing: '0 0' }}>
               <thead>
                 <tr>
-                  {/* Columna Izquierda Fija: Se acentuó la sombra para separar visualmente */}
+                  {/* Columna Izquierda Fija */}
                   <th className="sticky left-0 z-20 bg-gray-50 w-[90px] md:w-40 border-r border-transparent shadow-[6px_0_15px_-4px_rgba(0,0,0,0.08)]"></th>
                   
-                  {/* Tarjetas de Propiedades: Se cambió snap-center por snap-start */}
+                  {/* Tarjetas de Propiedades */}
                   {propiedadesAComparar.map(prop => (
                     <th key={prop.id} className="min-w-[270px] md:min-w-[320px] px-3 align-bottom snap-start">
                       <div className="bg-white rounded-t-3xl overflow-hidden border border-gray-100 border-b-0 relative">
@@ -183,8 +212,8 @@ export const MatrizComparativa = () => {
                          onClick={() => contactarAsesor(prop)} 
                          className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-xl font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
                        >
-                          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 0 5.386 0 12.033c0 2.128.553 4.205 1.604 6.035L.145 24l6.113-1.605c1.764.966 3.754 1.476 5.77 1.476 6.647 0 12.034-5.386 12.034-12.034C24 5.386 18.678 0 12.031 0zm0 21.894c-1.802 0-3.565-.484-5.112-1.404l-.367-.218-3.805.998.998-3.71-.238-.38A9.873 9.873 0 0 1 2.051 12.033c0-5.513 4.487-10 10-10 5.513 0 10 4.487 10 10s-4.487 10-9.999 10zm5.485-7.493c-.302-.15-1.785-.88-2.062-.98-.278-.1-.481-.15-.683.15-.203.301-.781.98-.957 1.18-.175.201-.35.226-.652.076-1.528-.758-2.613-1.442-3.626-3.15-.176-.297-.018-.458.133-.608.135-.135.302-.352.453-.528.15-.176.202-.301.302-.502.1-.201.05-.377-.025-.527-.075-.15-.683-1.645-.935-2.253-.246-.593-.497-.512-.683-.521-.175-.009-.376-.009-.578-.009-.202 0-.528.075-.805.376-.277.301-1.056 1.031-1.056 2.513 0 1.482 1.082 2.915 1.233 3.116.15.201 2.126 3.245 5.15 4.547 2.08 .894 2.87 .974 3.938.82 1.156-.168 3.565-1.457 4.067-2.865.503-1.408.503-2.614.353-2.865-.151-.252-.553-.402-.855-.553z"/></svg>
-                          Agendar Visita
+                         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 0 5.386 0 12.033c0 2.128.553 4.205 1.604 6.035L.145 24l6.113-1.605c1.764.966 3.754 1.476 5.77 1.476 6.647 0 12.034-5.386 12.034-12.034C24 5.386 18.678 0 12.031 0zm0 21.894c-1.802 0-3.565-.484-5.112-1.404l-.367-.218-3.805.998.998-3.71-.238-.38A9.873 9.873 0 0 1 2.051 12.033c0-5.513 4.487-10 10-10 5.513 0 10 4.487 10 10s-4.487 10-9.999 10zm5.485-7.493c-.302-.15-1.785-.88-2.062-.98-.278-.1-.481-.15-.683.15-.203.301-.781.98-.957 1.18-.175.201-.35.226-.652.076-1.528-.758-2.613-1.442-3.626-3.15-.176-.297-.018-.458.133-.608.135-.135.302-.352.453-.528.15-.176.202-.301.302-.502.1-.201.05-.377-.025-.527-.075-.15-.683-1.645-.935-2.253-.246-.593-.497-.512-.683-.521-.175-.009-.376-.009-.578-.009-.202 0-.528.075-.805.376-.277.301-1.056 1.031-1.056 2.513 0 1.482 1.082 2.915 1.233 3.116.15.201 2.126 3.245 5.15 4.547 2.08 .894 2.87 .974 3.938.82 1.156-.168 3.565-1.457 4.067-2.865.503-1.408.503-2.614.353-2.865-.151-.252-.553-.402-.855-.553z"/></svg>
+                         Agendar Visita
                        </button>
                     </td>
                   ))}
