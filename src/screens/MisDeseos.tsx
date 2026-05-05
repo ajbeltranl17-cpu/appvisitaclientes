@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
 export const MisDeseos = () => {
@@ -15,6 +17,38 @@ export const MisDeseos = () => {
   const [estacionamientos, setEstacionamientos] = useState(1);
   const [antiguedad, setAntiguedad] = useState('Preventa');
   const [amenidadesSeleccionadas, setAmenidadesSeleccionadas] = useState<string[]>(['Alberca', 'Seguridad 24/7']);
+  
+  const [guardando, setGuardando] = useState(false);
+
+  // Cargar datos previos si existen (Fase 1: Tubería conectada)
+  useEffect(() => {
+    const fetchDeseos = async () => {
+      if (!idVisita) return;
+      try {
+        const docRef = doc(db, 'visitas', idVisita);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.deseos) {
+            setUbicacion(data.deseos.ubicacion || ubicacion);
+            setPresupuesto(data.deseos.presupuesto || presupuesto);
+            setTipoPropiedad(data.deseos.tipoPropiedad || tipoPropiedad);
+            setRecamaras(data.deseos.recamaras || recamaras);
+            setBanos(data.deseos.banos || banos);
+            setEstacionamientos(data.deseos.estacionamientos || estacionamientos);
+            setAntiguedad(data.deseos.antiguedad || antiguedad);
+            setAmenidadesSeleccionadas(data.deseos.amenidades || amenidadesSeleccionadas);
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar los deseos:", error);
+      }
+    };
+
+    fetchDeseos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idVisita]);
 
   const tipos = ['Casa', 'Departamento', 'Terreno'];
   const antiguedades = ['Preventa', 'Nueva', 'Usada'];
@@ -31,10 +65,36 @@ export const MisDeseos = () => {
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 
-  // FUNCIÓN PARA COMPARTIR POR WHATSAPP
-  const compartirPorWhatsApp = () => {
-    const numeroAsesor = ""; 
+  // FUNCIÓN CENTRAL PARA GUARDAR EN FIREBASE
+  const guardarEnBaseDeDatos = async () => {
+    if (!idVisita) return;
+    setGuardando(true);
+    try {
+      const docRef = doc(db, 'visitas', idVisita);
+      await updateDoc(docRef, {
+        deseos: {
+          ubicacion,
+          presupuesto,
+          tipoPropiedad,
+          recamaras,
+          banos,
+          estacionamientos,
+          antiguedad,
+          amenidades: amenidadesSeleccionadas
+        }
+      });
+    } catch (error) {
+      console.error("Error al guardar en Firebase:", error);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // INTERCEPTORES DE BOTONES
+  const manejarCompartirWhatsApp = async () => {
+    await guardarEnBaseDeDatos(); // Primero guardamos
     
+    const numeroAsesor = ""; 
     const mensaje = `¡Hola! He definido mis deseos para mi próxima propiedad:\n\n` +
       `📍 *Ubicación:* ${ubicacion}\n` +
       `🏠 *Tipo:* ${tipoPropiedad}\n` +
@@ -51,6 +111,11 @@ export const MisDeseos = () => {
       : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
       
     window.open(url, '_blank');
+  };
+
+  const manejarSiguientePaso = async () => {
+    await guardarEnBaseDeDatos(); // Primero guardamos
+    navigate(`/catalogo/${idVisita}`); // Luego avanzamos
   };
 
   const Contador = ({ label, icon, valor, setValor }: { label: string, icon: string, valor: number, setValor: (v: number) => void }) => (
@@ -182,23 +247,23 @@ export const MisDeseos = () => {
       <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent z-10 space-y-2">
         <div className="max-w-md mx-auto space-y-3">
           
-          {/* Botón de WhatsApp NUEVO */}
           <button 
-            onClick={compartirPorWhatsApp}
-            className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-lg flex justify-center items-center gap-3 active:scale-95 transition-all"
+            onClick={manejarCompartirWhatsApp}
+            disabled={guardando}
+            className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-lg flex justify-center items-center gap-3 active:scale-95 transition-all disabled:opacity-70"
           >
-            Compartir Mis Deseos con Mi Asesor
+            {guardando ? 'Guardando...' : 'Compartir Mis Deseos con Mi Asesor'}
             <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                <path d="M12.031 0C5.385 0 0 5.386 0 12.033c0 2.128.553 4.205 1.604 6.035L.145 24l6.113-1.605c1.764.966 3.754 1.476 5.77 1.476 6.647 0 12.034-5.386 12.034-12.034C24 5.386 18.678 0 12.031 0zm0 21.894c-1.802 0-3.565-.484-5.112-1.404l-.367-.218-3.805.998.998-3.71-.238-.38A9.873 9.873 0 0 1 2.051 12.033c0-5.513 4.487-10 10-10 5.513 0 10 4.487 10 10s-4.487 10-9.999 10zm5.485-7.493c-.302-.15-1.785-.88-2.062-.98-.278-.1-.481-.15-.683.15-.203.301-.781.98-.957 1.18-.175.201-.35.226-.652.076-1.528-.758-2.613-1.442-3.626-3.15-.176-.297-.018-.458.133-.608.135-.135.302-.352.453-.528.15-.176.202-.301.302-.502.1-.201.05-.377-.025-.527-.075-.15-.683-1.645-.935-2.253-.246-.593-.497-.512-.683-.521-.175-.009-.376-.009-.578-.009-.202 0-.528.075-.805.376-.277.301-1.056 1.031-1.056 2.513 0 1.482 1.082 2.915 1.233 3.116.15.201 2.126 3.245 5.15 4.547 2.08 .894 2.87 .974 3.938.82 1.156-.168 3.565-1.457 4.067-2.865.503-1.408.503-2.614.353-2.865-.151-.252-.553-.402-.855-.553z"/>
             </svg>
           </button>
 
-          {/* Botón de Buscar (Original) */}
           <button 
-            onClick={() => navigate(`/catalogo/${idVisita}`)}
-            className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95"
+            onClick={manejarSiguientePaso}
+            disabled={guardando}
+            className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95 disabled:opacity-70"
           >
-            Buscar Propiedades
+            {guardando ? 'Guardando...' : 'Buscar Propiedades'}
             <span className="material-symbols-outlined">search</span>
           </button>
         </div>
