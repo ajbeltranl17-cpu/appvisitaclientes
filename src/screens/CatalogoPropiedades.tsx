@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore'; // onSnapshot para tiempo real
 import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
@@ -9,74 +9,38 @@ export const CatalogoPropiedades = () => {
   const navigate = useNavigate();
 
   // Estados
-  const [seleccionados, setSeleccionados] = useState<string[]>(['1']);
+  const [seleccionados, setSeleccionados] = useState<string[]>([]);
   const [buscando, setBuscando] = useState(true);
   const [deseosCliente, setDeseosCliente] = useState<any>(null);
+  
+  // Estado para guardar el inventario real que viene de WP
+  const [propiedades, setPropiedades] = useState<any[]>([]);
 
-  // Conexión a Firebase para extraer los deseos del cliente
+  // Conexión a Firebase (El Espía en tiempo real)
   useEffect(() => {
-    const fetchDeseosYBuscar = async () => {
-      if (!idVisita) return;
-      try {
-        const docRef = doc(db, 'visitas', idVisita);
-        const docSnap = await getDoc(docRef);
+    if (!idVisita) return;
+    
+    const docRef = doc(db, 'visitas', idVisita);
+    
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
         
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data.deseos) {
-            setDeseosCliente(data.deseos);
-          }
+        // Guardamos los deseos para poder mostrar el presupuesto en el mensaje de carga
+        if (data.deseos) {
+          setDeseosCliente(data.deseos);
         }
-      } catch (error) {
-        console.error("Error al cargar los deseos para el catálogo:", error);
-      } finally {
-        // Simulamos el tiempo de "Scraping" o búsqueda con IA en tu sitio web (3 segundos)
-        setTimeout(() => setBuscando(false), 3000);
+
+        // Si Vercel ya terminó de buscar y trajo las propiedades...
+        if (data.busquedaCompletada && data.opcionesCatalogo) {
+          setPropiedades(data.opcionesCatalogo);
+          setBuscando(false);
+        }
       }
-    };
+    });
 
-    fetchDeseosYBuscar();
+    return () => unsubscribe();
   }, [idVisita]);
-
-  // Inventario Base (Fase 1: Tubería. Fase 2: Llegarán dinámicamente de tu sitio web)
-  const propiedades = [
-    {
-      id: '1',
-      titulo: 'Residencia Costa de Oro',
-      precio: 8500000,
-      ubicacion: 'Boca del Río',
-      habitaciones: 4,
-      banos: 3,
-      m2: 450,
-      estacionamientos: 3,
-      img: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800',
-      match: true
-    },
-    {
-      id: '2',
-      titulo: 'Loft Distrito K',
-      precio: 8900000,
-      ubicacion: 'Riviera Veracruzana',
-      habitaciones: 3,
-      banos: 2.5,
-      m2: 280,
-      estacionamientos: 2,
-      img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=800',
-      match: false
-    },
-    {
-      id: '3',
-      titulo: 'Torre Alvento, PH',
-      precio: 12450000,
-      ubicacion: 'Boca del Río',
-      habitaciones: 3,
-      banos: 3.5,
-      m2: 320,
-      estacionamientos: 2,
-      img: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=800',
-      match: false
-    }
-  ];
 
   const toggleSeleccion = (id: string) => {
     if (seleccionados.includes(id)) {
@@ -102,6 +66,29 @@ export const CatalogoPropiedades = () => {
       : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
       
     window.open(url, '_blank');
+  };
+
+  // 🚀 EL BOTÓN MÁGICO: Guarda las elecciones antes de ir a comparar
+  const irAComparar = async () => {
+    if (!idVisita) return;
+    
+    try {
+      // Filtramos las propiedades completas que el cliente eligió
+      const propiedadesElegidas = propiedades.filter(prop => seleccionados.includes(prop.id));
+      
+      // Las guardamos en el expediente de Firebase
+      const docRef = doc(db, 'visitas', idVisita);
+      await updateDoc(docRef, {
+        propiedadesComparar: propiedadesElegidas
+      });
+
+      // ¡Nos vamos a la matriz!
+      navigate(`/matriz/${idVisita}`);
+    } catch (error) {
+      console.error("Error al guardar la comparativa:", error);
+      // Por si acaso falla el internet, lo mandamos a la pantalla de todos modos
+      navigate(`/matriz/${idVisita}`);
+    }
   };
 
   // Pantalla de Carga Simulando la Búsqueda Inteligente
@@ -135,7 +122,7 @@ export const CatalogoPropiedades = () => {
         <section className="px-2">
           <span className="text-[#C5A059] font-black uppercase text-[10px] tracking-[0.3em]">Resultados de tuconexioninmobiliaria.com</span>
           <h1 className="text-3xl font-black text-[#00213b] mt-1">Sugerencias para ti</h1>
-          <p className="text-gray-500 text-sm mt-2">Basado en tus preferencias, hemos filtrado estas residencias. Selecciona hasta 3 para compararlas detalle a detalle.</p>
+          <p className="text-gray-500 text-sm mt-2">Basado en tus preferencias, hemos filtrado estas opciones. Selecciona hasta 3 para compararlas detalle a detalle.</p>
         </section>
 
         {/* Grid de Propiedades */}
@@ -147,9 +134,10 @@ export const CatalogoPropiedades = () => {
                 
                 {/* Imagen y Etiquetas */}
                 <div className="relative h-56 w-full bg-gray-200">
-                  <img src={prop.img} alt={prop.titulo} className="w-full h-full object-cover" />
+                  <img src={prop.imagen || prop.img} alt={prop.titulo} className="w-full h-full object-cover" />
                   
-                  {prop.match && (
+                  {/* Etiqueta de Match (Lógica simple: Si vale menos que el presupuesto, es Match) */}
+                  {deseosCliente?.presupuesto && prop.precio <= deseosCliente.presupuesto && (
                     <div className="absolute top-4 left-4 bg-[#C5A059] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md">
                       <span className="material-symbols-outlined text-xs">star</span>
                       Match Ideal
@@ -166,31 +154,30 @@ export const CatalogoPropiedades = () => {
                 {/* Info de la Propiedad */}
                 <div className="p-5 space-y-4">
                   <div>
-                    <h3 className="text-lg font-black text-[#00213b]">{prop.titulo}</h3>
+                    <h3 className="text-lg font-black text-[#00213b] leading-tight line-clamp-2">{prop.titulo}</h3>
                     <p className="text-xl font-bold text-[#C5A059] mt-1">{formatearMoneda(prop.precio)}</p>
                     <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm font-medium">
                       <span className="material-symbols-outlined text-[16px]">location_on</span>
-                      {prop.ubicacion}
+                      {deseosCliente?.ubicacion || 'Ubicación Premium'}
                     </div>
                   </div>
 
                   {/* Íconos de características */}
-                  <div className="grid grid-cols-4 gap-2 border-t border-b border-gray-100 py-4">
+                  <div className="grid grid-cols-3 gap-2 border-t border-b border-gray-100 py-4">
                     <div className="flex flex-col items-center text-center">
                       <span className="material-symbols-outlined text-[#00213b] mb-1 text-lg">bed</span>
-                      <span className="text-[10px] text-gray-500 font-bold">{prop.habitaciones} Hab.</span>
+                      <span className="text-[10px] text-gray-500 font-bold">{prop.habitaciones || 3} Hab.</span>
                     </div>
                     <div className="flex flex-col items-center text-center">
                       <span className="material-symbols-outlined text-[#00213b] mb-1 text-lg">shower</span>
-                      <span className="text-[10px] text-gray-500 font-bold">{prop.banos} Baños</span>
+                      <span className="text-[10px] text-gray-500 font-bold">{prop.banos || 2} Baños</span>
                     </div>
+                    {/* Botón de ver en web */}
                     <div className="flex flex-col items-center text-center">
-                      <span className="material-symbols-outlined text-[#00213b] mb-1 text-lg">square_foot</span>
-                      <span className="text-[10px] text-gray-500 font-bold">{prop.m2} m²</span>
-                    </div>
-                    <div className="flex flex-col items-center text-center">
-                      <span className="material-symbols-outlined text-[#00213b] mb-1 text-lg">directions_car</span>
-                      <span className="text-[10px] text-gray-500 font-bold">{prop.estacionamientos} Estac.</span>
+                      <a href={prop.url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center hover:opacity-70 transition-opacity">
+                        <span className="material-symbols-outlined text-[#C5A059] mb-1 text-lg">link</span>
+                        <span className="text-[10px] text-[#C5A059] font-bold">Ver Web</span>
+                      </a>
                     </div>
                   </div>
 
@@ -228,7 +215,7 @@ export const CatalogoPropiedades = () => {
               <p className="font-black text-lg leading-tight">{seleccionados.length} de 3 listos</p>
             </div>
             <button 
-              onClick={() => navigate(`/matriz/${idVisita}`)}
+              onClick={irAComparar}
               className="bg-[#C5A059] text-white px-6 py-3.5 rounded-2xl font-bold flex items-center gap-2 active:scale-95 transition-transform"
             >
               Comparar
