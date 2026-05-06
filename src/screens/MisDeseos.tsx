@@ -18,9 +18,11 @@ export const MisDeseos = () => {
   const [antiguedad, setAntiguedad] = useState('Preventa');
   const [amenidadesSeleccionadas, setAmenidadesSeleccionadas] = useState<string[]>(['Alberca', 'Seguridad 24/7']);
   
+  // Estados de carga (Guardando datos y Buscando en WP)
   const [guardando, setGuardando] = useState(false);
+  const [buscandoWP, setBuscandoWP] = useState(false);
 
-  // Cargar datos previos si existen (Fase 1: Tubería conectada)
+  // Cargar datos previos si existen
   useEffect(() => {
     const fetchDeseos = async () => {
       if (!idVisita) return;
@@ -92,9 +94,9 @@ export const MisDeseos = () => {
 
   // INTERCEPTORES DE BOTONES
   const manejarCompartirWhatsApp = async () => {
-    await guardarEnBaseDeDatos(); // Primero guardamos
+    await guardarEnBaseDeDatos(); 
     
-    const numeroAsesor = ""; 
+    const numeroAsesor = ""; // Idealmente esto vendría de Firebase (data.asesorWhatsapp)
     const mensaje = `¡Hola! He definido mis deseos para mi próxima propiedad:\n\n` +
       `📍 *Ubicación:* ${ubicacion}\n` +
       `🏠 *Tipo:* ${tipoPropiedad}\n` +
@@ -113,9 +115,39 @@ export const MisDeseos = () => {
     window.open(url, '_blank');
   };
 
+  // 🚀 EL NUEVO MOTOR DE BÚSQUEDA
   const manejarSiguientePaso = async () => {
-    await guardarEnBaseDeDatos(); // Primero guardamos
-    navigate(`/catalogo/${idVisita}`); // Luego avanzamos
+    if (!idVisita) return;
+    
+    // 1. Guardamos la preferencia del cliente
+    await guardarEnBaseDeDatos(); 
+    
+    // 2. Activamos el efecto de carga
+    setBuscandoWP(true); 
+
+    try {
+      // 3. Detonamos la función en Vercel
+      await fetch('/api/buscar-propiedades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitaId: idVisita,
+          presupuestoMax: presupuesto,
+          tipoPropiedad: tipoPropiedad,
+          ubicacionTexto: ubicacion
+        })
+      });
+
+      // 4. Si todo salió bien, navegamos al catálogo
+      navigate(`/catalogo/${idVisita}`); 
+
+    } catch (error) {
+      console.error("Error al buscar propiedades en Vercel:", error);
+      // Fallback: Si algo se rompe, lo mandamos al catálogo de todos modos para no bloquearlo
+      navigate(`/catalogo/${idVisita}`);
+    } finally {
+      setBuscandoWP(false);
+    }
   };
 
   const Contador = ({ label, icon, valor, setValor }: { label: string, icon: string, valor: number, setValor: (v: number) => void }) => (
@@ -135,6 +167,23 @@ export const MisDeseos = () => {
       </div>
     </div>
   );
+
+  // Pantalla de Carga de Búsqueda
+  if (buscandoWP) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center font-sans">
+         <div className="w-20 h-20 relative flex items-center justify-center mb-6">
+            <div className="absolute inset-0 border-4 border-[#00213b]/20 rounded-full animate-ping"></div>
+            <div className="absolute inset-2 border-4 border-[#00213b] border-t-transparent rounded-full animate-spin"></div>
+            <span className="material-symbols-outlined text-[#C5A059] text-3xl animate-pulse">real_estate_agent</span>
+         </div>
+         <h2 className="text-xl font-black text-[#00213b] mb-2 uppercase tracking-wide">Buscando Opciones</h2>
+         <p className="text-gray-500 text-sm max-w-[280px]">
+           Estamos conectando con nuestro inventario en tiempo real para encontrar {tipoPropiedad.toLowerCase()}s en <strong className="text-[#C5A059]">{ubicacion}</strong>...
+         </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -249,7 +298,7 @@ export const MisDeseos = () => {
           
           <button 
             onClick={manejarCompartirWhatsApp}
-            disabled={guardando}
+            disabled={guardando || buscandoWP}
             className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-lg flex justify-center items-center gap-3 active:scale-95 transition-all disabled:opacity-70"
           >
             {guardando ? 'Guardando...' : 'Compartir Mis Deseos con Mi Asesor'}
@@ -260,11 +309,11 @@ export const MisDeseos = () => {
 
           <button 
             onClick={manejarSiguientePaso}
-            disabled={guardando}
+            disabled={guardando || buscandoWP}
             className="w-full bg-[#00213b] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] shadow-xl hover:bg-[#00335c] transition-colors flex justify-center items-center gap-3 active:scale-95 disabled:opacity-70"
           >
-            {guardando ? 'Guardando...' : 'Buscar Propiedades'}
-            <span className="material-symbols-outlined">search</span>
+            {buscandoWP ? 'Buscando...' : 'Buscar Propiedades'}
+            {!buscandoWP && <span className="material-symbols-outlined">search</span>}
           </button>
         </div>
       </div>
