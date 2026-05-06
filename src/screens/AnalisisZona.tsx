@@ -1,71 +1,84 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore'; // Cambiamos a onSnapshot (El Espía)
 import { db } from '../firebase';
 import { EncabezadoGlobal } from '../components/EncabezadoGlobal';
 
-// Definimos qué datos esperamos de Firebase
+// 1. Ampliamos la memoria para recibir el JSON de la IA y el aviso de que ya terminó
+interface AnalisisData {
+  educacion?: string[];
+  comercio?: string[];
+  salud?: string[];
+  conectividad?: string[];
+}
+
 interface VisitaData {
   ubicacion: string;
   mapsUrl: string;
+  datosProcesados?: boolean; // Vercel nos avisa con esto cuando termina
+  analisisZona?: AnalisisData | string; // Recibimos el diccionario de la IA
 }
 
 export const AnalisisZona = () => {
   const navigate = useNavigate();
   const { idVisita } = useParams();
 
-  // Estados de memoria e IA
+  // Estados de memoria
   const [visita, setVisita] = useState<VisitaData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [analizandoIA, setAnalizandoIA] = useState(true); // Efecto visual de IA
 
-  // Buscamos la ubicación real en la base de datos
+  // 2. El Espía de Firebase en Tiempo Real
   useEffect(() => {
-    const fetchVisita = async () => {
-      if (!idVisita) return;
-      try {
-        const docRef = doc(db, 'visitas', idVisita);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setVisita(docSnap.data() as VisitaData);
-        }
-      } catch (error) {
-        console.error("Error al cargar la zona:", error);
-      } finally {
-        setLoading(false);
-        // Simulamos que la IA está haciendo el estudio de mercado (2.5 segundos)
-        setTimeout(() => setAnalizandoIA(false), 2500);
+    if (!idVisita) return;
+    
+    const docRef = doc(db, 'visitas', idVisita);
+    
+    // onSnapshot escucha los cambios en vivo. Si Vercel actualiza, esto reacciona al instante.
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setVisita(docSnap.data() as VisitaData);
       }
-    };
+      setLoading(false);
+    }, (error) => {
+      console.error("Error al cargar la zona:", error);
+      setLoading(false);
+    });
 
-    fetchVisita();
+    return () => unsubscribe();
   }, [idVisita]);
+
+  // 3. Conectamos los cables: Mezclamos tu diseño con el cerebro de la IA
+  // Si la IA aún no manda los datos (o hubo un error), mostramos tus datos por defecto
+  const analisis = typeof visita?.analisisZona === 'object' ? visita.analisisZona : {};
 
   const puntosInteres = [
     { 
       categoria: 'Educación', 
       icon: 'school', 
-      items: ['Universidad Veracruzana (UV)', 'Colegio Americano de Veracruz', 'Escuelas de prestigio a < 5 min'] 
+      items: analisis?.educacion || ['Universidad Veracruzana (UV)', 'Colegio Americano de Veracruz', 'Escuelas de prestigio a < 5 min'] 
     },
     { 
       categoria: 'Comercio y Ocio', 
       icon: 'local_mall', 
-      items: ['Plaza Mocambo', 'Costco Veracruz', 'Distrito Boca (Restaurantes)'] 
+      items: analisis?.comercio || ['Plaza Mocambo', 'Costco Veracruz', 'Distrito Boca (Restaurantes)'] 
     },
     { 
       categoria: 'Salud', 
       icon: 'medical_services', 
-      items: ['Hospital Millenium', 'Clínicas especializadas', 'Farmacias 24/7 en la zona'] 
+      items: analisis?.salud || ['Hospital Millenium', 'Clínicas especializadas', 'Farmacias 24/7 en la zona'] 
     },
     { 
       categoria: 'Conectividad', 
       icon: 'directions_car', 
-      items: ['Acceso rápido a Av. Juan Pablo II', 'Cerca de Blvd. Manuel Ávila Camacho', 'Zona segura y caminable'] 
+      items: analisis?.conectividad || ['Acceso rápido a Av. Juan Pablo II', 'Cerca de Blvd. Manuel Ávila Camacho', 'Zona segura y caminable'] 
     }
   ];
 
-  // Pantalla de Carga de la IA (El efecto "Wow")
-  if (loading || analizandoIA) {
+  // 4. Pantalla de Carga de la IA (Ahora es 100% real, ya no es simulada)
+  // Mostramos el efecto "Wow" si está cargando la red, o si Vercel aún no pone "datosProcesados: true"
+  const isProcesandoIA = loading || !visita?.datosProcesados;
+
+  if (isProcesandoIA) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center font-sans">
          <div className="w-20 h-20 relative flex items-center justify-center mb-6">
