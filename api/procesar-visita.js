@@ -3,33 +3,25 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// ABRIR LA CAJA FUERTE
 if (!getApps().length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
     initializeApp({ credential: cert(serviceAccount) });
   } catch (error) {
-    console.error("Error leyendo la llave de Firebase:", error);
+    console.error("Error Firebase:", error);
   }
 }
 const db = getFirestore();
-
-// CONECTAR EL CEREBRO DE IA
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' });
-  }
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   const { visitaId, propiedadUrl, mapsUrl, ubicacionTexto } = req.body;
-  if (!visitaId) return res.status(400).json({ error: 'Falta el ID de visita' });
-
+  
   let imagenDestacada = '';
   let precioExtraido = 0;
   let plusvaliaIa = 8.5; 
-
-  // Salvavidas: Datos por defecto por si la IA se cae
   let analisisIa = {
     educacion: ["Colegios de prestigio en la zona", "Instituciones educativas a pocos minutos"],
     comercio: ["Centros comerciales y plazas cercanas", "Supermercados de fácil acceso"],
@@ -38,87 +30,55 @@ export default async function handler(req, res) {
   };
 
   try {
-    // 🕵️‍♀️ ACCIÓN A: RASTREAR TU PÁGINA WEB (Scraping)
+    // 1. RASTREO WEB
     if (propiedadUrl) {
-      try {
-        const respuestaWeb = await fetch(propiedadUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/91.0.4472.124' }
-        });
-        const html = await respuestaWeb.text();
-        const $ = cheerio.load(html);
-
-        imagenDestacada = $('meta[property="og:image"]').attr('content') || '';
-        let precioTextoRaw = $('.item-price').first().text() || $('meta[name="price"]').attr('content');
-        const precioTexto = (precioTextoRaw || '').replace(/[^0-9]/g, '');
-        if (precioTexto) precioExtraido = parseInt(precioTexto, 10);
-      } catch (e) {
-        console.error(`Error extrayendo web:`, e);
-      }
+      const resp = await fetch(propiedadUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const html = await resp.text();
+      const $ = cheerio.load(html);
+      imagenDestacada = $('meta[property="og:image"]').attr('content') || '';
+      let pRaw = $('.item-price').first().text() || $('meta[name="price"]').attr('content') || '';
+      precioExtraido = parseInt(pRaw.replace(/[^0-9]/g, ''), 10) || 0;
     }
 
-    // 🧠 ACCIÓN B: CONSULTAR A LA INTELIGENCIA ARTIFICIAL (Gemini)
+    // 2. INTELIGENCIA ARTIFICIAL
     if (ubicacionTexto || mapsUrl) {
-      try {
-        const modelo = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `Analiza la ubicación: ${ubicacionTexto}. Devuelve SOLO un JSON con esta estructura (sin texto extra): {"educacion":["punto1","punto2"],"comercio":["punto1","punto2"],"salud":["punto1","punto2"],"conectividad":["punto1","punto2"],"plusvalia":12.5}. Sé muy específico con beneficios reales de Veracruz/Boca del Río.`;
+      
+      const result = await model.generateContent(prompt);
+      const text = await result.response.text();
+      
+      // LIMPIADOR AVANZADO: Busca el primer '{' y el último '}'
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      
+      if (start !== -1 && end !== -1) {
+        const rawJson = text.substring(start, end + 1);
+        const data = JSON.parse(rawJson);
         
-        // Instrucción más estricta para evitar que la IA hable de más
-        const promptMaster = `
-          Eres un experto consultor inmobiliario en Veracruz y Boca del Río.
-          Ubicación: ${ubicacionTexto}.
-          
-          REGLA ESTRICTA: Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE un objeto JSON válido. Cero texto antes, cero texto después. No incluyas comillas invertidas ni la palabra json.
-          
-          Estructura exacta:
-          {
-            "educacion": ["Punto 1", "Punto 2"],
-            "comercio": ["Punto 1", "Punto 2"],
-            "salud": ["Punto 1", "Punto 2"],
-            "conectividad": ["Punto 1", "Punto 2"],
-            "plusvalia": 12.5
-          }
-          Genera 2 o 3 beneficios breves, reales y persuasivos para cada categoría basados en la zona.
-        `;
-
-        const resultadoIA = await modelo.generateContent(promptMaster);
-        const respuestaTexto = resultadoIA.response.text();
-        
-        // EXTRACTOR INDESTRUCTIBLE: Busca solo lo que está entre las llaves { }
-        const match = respuestaTexto.match(/\{[\s\S]*\}/);
-        
-        if (match) {
-          const jsonLimpio = match[0];
-          const datosIA = JSON.parse(jsonLimpio);
-
-          // Asignamos los datos con protección anti-mayúsculas
-          analisisIa = {
-            educacion: datosIA.educacion || datosIA.Educación || datosIA.Educacion || analisisIa.educacion,
-            comercio: datosIA.comercio || datosIA.Comercio || analisisIa.comercio,
-            salud: datosIA.salud || datosIA.Salud || analisisIa.salud,
-            conectividad: datosIA.conectividad || datosIA.Conectividad || analisisIa.conectividad
-          };
-
-          if (datosIA.plusvalia) plusvaliaIa = Number(datosIA.plusvalia);
-        } else {
-          console.error("La IA no devolvió el formato esperado:", respuestaTexto);
-        }
-
-      } catch (e) {
-         console.error(`Error de IA:`, e);
+        // Mapeo seguro ignorando mayúsculas/minúsculas
+        analisisIa = {
+          educacion: data.educacion || data.Educacion || data.Educación || analisisIa.educacion,
+          comercio: data.comercio || data.Comercio || analisisIa.comercio,
+          salud: data.salud || data.Salud || analisisIa.salud,
+          conectividad: data.conectividad || data.Conectividad || analisisIa.conectividad
+        };
+        if (data.plusvalia) plusvaliaIa = Number(data.plusvalia);
       }
     }
 
-    // 💾 ACCIÓN C: GUARDAR EN FIREBASE
+    // 3. GUARDADO
     await db.collection('visitas').doc(visitaId).update({
       propiedadImagen: imagenDestacada,
-      precioPropiedad: precioExtraido || 3500000, 
+      precioPropiedad: precioExtraido || 3500000,
       analisisZona: analisisIa,
       tasaPlusvaliaZona: plusvaliaIa,
-      datosProcesados: true 
+      datosProcesados: true
     });
 
-    return res.status(200).json({ status: 'Misión cumplida en el servidor' });
-
-  } catch (error) {
-    return res.status(500).json({ error: 'Hubo un error en el servidor.' });
+    return res.status(200).json({ success: true });
+  } catch (e) {
+    console.error("Error crítico:", e);
+    return res.status(500).json({ error: e.message });
   }
 }
