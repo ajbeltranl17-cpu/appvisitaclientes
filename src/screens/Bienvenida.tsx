@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore'; // Cambiamos getDoc por onSnapshot
 import { db } from '../firebase';
 
-// Agregamos el campo de la imagen que Vercel ahora nos manda
 interface VisitaData {
   clienteNombre: string;
   asesorNombre: string;
@@ -15,41 +14,39 @@ export const Bienvenida = () => {
   const { idVisita } = useParams();
   const navigate = useNavigate();
 
-  // Memoria de la pantalla
   const [visita, setVisita] = useState<VisitaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // El buscador: Va a Firebase en cuanto la pantalla carga
+  // El Espía: Escucha a Firebase en TIEMPO REAL
   useEffect(() => {
-    const fetchVisita = async () => {
-      if (!idVisita) {
-        setError('Enlace no válido');
-        setLoading(false);
-        return;
+    if (!idVisita) {
+      setError('Enlace no válido');
+      setLoading(false);
+      return;
+    }
+
+    const docRef = doc(db, 'visitas', idVisita);
+    
+    // onSnapshot se queda "escuchando" cambios en la nube
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setVisita(docSnap.data() as VisitaData);
+        setError('');
+      } else {
+        setError('No encontramos esta invitación. Puede que haya expirado.');
       }
+      setLoading(false);
+    }, (err) => {
+      console.error("Error al buscar la visita:", err);
+      setError('Hubo un problema al cargar tu experiencia.');
+      setLoading(false);
+    });
 
-      try {
-        const docRef = doc(db, 'visitas', idVisita);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setVisita(docSnap.data() as VisitaData);
-        } else {
-          setError('No encontramos esta invitación. Puede que haya expirado.');
-        }
-      } catch (err) {
-        console.error("Error al buscar la visita:", err);
-        setError('Hubo un problema al cargar tu experiencia.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVisita();
+    // Limpiamos el espía si el usuario sale de la pantalla
+    return () => unsubscribe();
   }, [idVisita]);
 
-  // Pantalla de Carga
   if (loading) {
     return (
       <div className="min-h-screen bg-[#00213b] flex flex-col items-center justify-center">
@@ -59,7 +56,6 @@ export const Bienvenida = () => {
     );
   }
 
-  // Pantalla de Error (Si el link está mal)
   if (error || !visita) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
@@ -76,39 +72,34 @@ export const Bienvenida = () => {
     );
   }
 
-  // Pantalla de Éxito: ¡La Bienvenida VIP!
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-8">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border-t-8 border-t-[#C5A059]">
         
-        {/* Imagen de Portada Dinámica */}
-        <div className="h-48 sm:h-56 w-full relative">
+        <div className="h-48 sm:h-56 w-full relative transition-all duration-700 ease-in-out">
           <img 
-            // Aquí está la magia: Usamos la imagen extraída de tu web, o una por defecto si falla
+            // Si la imagen real llega, la pone. Si no, Unsplash entra al quite.
             src={visita.propiedadImagen || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
             alt="Propiedad" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-opacity duration-1000"
           />
-          {/* Overlay oscuro para darle elegancia */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#00213b]/90 to-transparent"></div>
           
           <div className="absolute bottom-6 left-6 right-6">
-            <span className="bg-[#C5A059] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+            <span className="bg-[#C5A059] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
               Tu Visita Inmobiliaria
             </span>
-            <h1 className="text-3xl font-black text-white mt-2 leading-tight">
+            <h1 className="text-3xl font-black text-white mt-2 leading-tight drop-shadow-md">
               Hola, <br/>{visita.clienteNombre}
             </h1>
           </div>
         </div>
 
-        {/* Contenido del Mensaje y Beneficios */}
         <div className="p-6 sm:p-8">
           <p className="text-gray-600 mb-6 text-sm leading-relaxed text-center">
             Tu asesor <strong className="text-[#00213b]">{visita.asesorNombre}</strong> ha preparado este portal exclusivo. Para ver la <strong className="text-[#C5A059]">ubicación exacta en Google Maps</strong> y acceder a tu panel con todos los beneficios, por favor haz clic abajo.
           </p>
 
-          {/* Lista de Beneficios */}
           <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
             <h3 className="text-[11px] font-bold text-[#00213b] uppercase tracking-wider mb-4 text-center">¿Qué incluye tu panel?</h3>
             <ul className="space-y-4">
@@ -135,7 +126,6 @@ export const Bienvenida = () => {
             </ul>
           </div>
 
-          {/* Botón para entrar al Dashboard */}
           <button 
             onClick={() => navigate(`/dashboard/${idVisita}`)}
             className="w-full bg-[#00213b] hover:bg-[#00182b] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 group"
