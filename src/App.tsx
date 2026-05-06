@@ -2,10 +2,13 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 
+// Importamos al Guardia de Seguridad
+import { RutaProtegida } from './components/RutaProtegida';
+
 // 1. Importaciones del Flujo Administrativo (Asesores)
-import { AccesoAdmin } from './screens/AccesoAdmin';     // Pantalla de Login
+import { AccesoAdmin } from './screens/AccesoAdmin';     // Pantalla de Login General
 import { AgendarVisita } from './screens/AgendarVisita'; // Formulario de captura
-import { AdminAsesores } from './screens/AdminAsesores'; // Panel que acabamos de crear
+import { AdminAsesores } from './screens/AdminAsesores'; // Panel de control de asesores
 
 // 2. Importaciones del Flujo del Cliente
 import { Bienvenida } from './screens/Bienvenida';
@@ -28,29 +31,44 @@ export default function App() {
         {/* =========================================
             RUTAS ADMINISTRATIVAS (SIN ID DE VISITA) 
            ========================================= */}
-        {/* La ruta principal ahora es el Login */}
+        {/* Pantalla principal de inicio de sesión */}
         <Route path="/" element={<AccesoAdmin />} />
         
-        {/* Pantalla donde el asesor llena los datos del cliente */}
-        <Route path="/agendar" element={<AgendarVisita />} />
+        {/* Pantalla donde se registran clientes (Protegida para cualquiera que inicie sesión) */}
+        <Route 
+          path="/agendar" 
+          element={
+            <RutaProtegida>
+              <AgendarVisita />
+            </RutaProtegida>
+          } 
+        />
         
-        {/* Panel de administración de usuarios */}
-        <Route path="/admin/asesores" element={<AdminAsesores />} />
+        {/* Panel de administración (Protegida EXCLUSIVAMENTE para el Admin) */}
+        <Route 
+          path="/admin/asesores" 
+          element={
+            <RutaProtegida requireAdmin={true}>
+              <AdminAsesores />
+            </RutaProtegida>
+          } 
+        />
 
 
         {/* =========================================
             RUTAS DEL CLIENTE (REQUIEREN ID DE VISITA) 
            ========================================= */}
-           <Route path="/bienvenida/:idVisita" element={<Bienvenida />} />
+        {/* Estas rutas quedan libres para que el cliente acceda con su ID */}
+        <Route path="/bienvenida/:idVisita" element={<Bienvenida />} />
         <Route path="/dashboard/:idVisita" element={<Dashboard />} />
         <Route path="/iniciar-visita/:idVisita" element={<IniciarVisita />} />
         <Route path="/analisis/:idVisita" element={<AnalisisZona />} />
         <Route path="/calculadora/:idVisita" element={<CalculadoraHipotecaria />} />
         <Route path="/plusvalia/:idVisita" element={<CalculadoraPlusvalia />} />
         <Route path="/galeria/:idVisita" element={<GaleriaVisita />} />
-      <Route path="/diseno-ia/:idVisita" element={<DisenoIA />} />
+        <Route path="/diseno-ia/:idVisita" element={<DisenoIA />} />
         <Route path="/swipe/:idVisita" element={<SwipePareja />} />
-      <Route path="/mis-deseos/:idVisita" element={<MisDeseos />} />
+        <Route path="/mis-deseos/:idVisita" element={<MisDeseos />} />
         <Route path="/catalogo/:idVisita" element={<CatalogoPropiedades />} />
         <Route path="/matriz/:idVisita" element={<MatrizComparativa />} />
 

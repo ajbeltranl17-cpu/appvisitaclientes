@@ -3,14 +3,23 @@ import { Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
 
-export const RutaProtegida = ({ children }: { children: React.ReactNode }) => {
+interface RutaProtegidaProps {
+  children: React.ReactNode;
+  requireAdmin?: boolean; // Le decimos al guardia si esta puerta es exclusiva del jefe
+}
+
+export const RutaProtegida = ({ children, requireAdmin = false }: RutaProtegidaProps) => {
   const [usuarioAutenticado, setUsuarioAutenticado] = useState<boolean | null>(null);
+  const [esAdmin, setEsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     // El guardia pregunta a Firebase si hay alguien validado
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUsuarioAutenticado(true);
+        // Revisamos el gafete que le pusimos al entrar
+        const role = localStorage.getItem('userRole');
+        setEsAdmin(role?.toLowerCase() === 'admin');
       } else {
         setUsuarioAutenticado(false);
       }
@@ -28,11 +37,16 @@ export const RutaProtegida = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Si no hay usuario, lo mandamos directo al login
+  // Si no hay usuario conectado, lo mandamos directo a la pantalla de Login (Ruta "/")
   if (usuarioAutenticado === false) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
-  // Si sí hay usuario, lo dejamos pasar a la pantalla que pidió
+  // Si la puerta es solo para el Admin y el usuario es un Asesor, lo regresamos a su área de trabajo
+  if (requireAdmin && !esAdmin) {
+    return <Navigate to="/agendar" replace />;
+  }
+
+  // Si todo está en orden, lo dejamos pasar
   return <>{children}</>;
 };
