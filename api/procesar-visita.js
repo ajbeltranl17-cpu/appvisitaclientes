@@ -29,8 +29,7 @@ export default async function handler(req, res) {
   let precioExtraido = 0;
   let plusvaliaIa = 8.5; 
 
-  // ⚠️ CAMBIO CRÍTICO: Inicializamos el Análisis como un Diccionario (Objeto), NUNCA como un texto.
-  // Así la pantalla no se rompe y muestra estos datos reales si la IA llega a fallar.
+  // Salvavidas: Datos por defecto por si la IA se cae
   let analisisIa = {
     educacion: ["Colegios de prestigio en la zona", "Instituciones educativas a pocos minutos"],
     comercio: ["Centros comerciales y plazas cercanas", "Supermercados de fácil acceso"],
@@ -62,11 +61,14 @@ export default async function handler(req, res) {
       try {
         const modelo = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
+        // Instrucción más estricta para evitar que la IA hable de más
         const promptMaster = `
-          Actúa como consultor inmobiliario de Veracruz y Boca del Río.
+          Eres un experto consultor inmobiliario en Veracruz y Boca del Río.
           Ubicación: ${ubicacionTexto}.
           
-          Devuélveme ÚNICAMENTE un JSON válido con esta estructura exacta (en minúsculas y sin acentos en las llaves):
+          REGLA ESTRICTA: Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE un objeto JSON válido. Cero texto antes, cero texto después. No incluyas comillas invertidas ni la palabra json.
+          
+          Estructura exacta:
           {
             "educacion": ["Punto 1", "Punto 2"],
             "comercio": ["Punto 1", "Punto 2"],
@@ -74,24 +76,31 @@ export default async function handler(req, res) {
             "conectividad": ["Punto 1", "Punto 2"],
             "plusvalia": 12.5
           }
-          Genera 2 o 3 beneficios breves y reales para cada categoría basados en la zona.
+          Genera 2 o 3 beneficios breves, reales y persuasivos para cada categoría basados en la zona.
         `;
 
         const resultadoIA = await modelo.generateContent(promptMaster);
         const respuestaTexto = resultadoIA.response.text();
         
-        const jsonLimpio = respuestaTexto.replace(/```json/g, '').replace(/```/g, '').trim();
-        const datosIA = JSON.parse(jsonLimpio);
+        // EXTRACTOR INDESTRUCTIBLE: Busca solo lo que está entre las llaves { }
+        const match = respuestaTexto.match(/\{[\s\S]*\}/);
+        
+        if (match) {
+          const jsonLimpio = match[0];
+          const datosIA = JSON.parse(jsonLimpio);
 
-        // Filtro Anti-Balas: Aceptamos la palabra aunque la IA le haya puesto acentos o mayúsculas
-        analisisIa = {
-          educacion: datosIA.educacion || datosIA.Educación || datosIA.Educacion || analisisIa.educacion,
-          comercio: datosIA.comercio || datosIA.Comercio || analisisIa.comercio,
-          salud: datosIA.salud || datosIA.Salud || analisisIa.salud,
-          conectividad: datosIA.conectividad || datosIA.Conectividad || analisisIa.conectividad
-        };
+          // Asignamos los datos con protección anti-mayúsculas
+          analisisIa = {
+            educacion: datosIA.educacion || datosIA.Educación || datosIA.Educacion || analisisIa.educacion,
+            comercio: datosIA.comercio || datosIA.Comercio || analisisIa.comercio,
+            salud: datosIA.salud || datosIA.Salud || analisisIa.salud,
+            conectividad: datosIA.conectividad || datosIA.Conectividad || analisisIa.conectividad
+          };
 
-        if (datosIA.plusvalia) plusvaliaIa = Number(datosIA.plusvalia);
+          if (datosIA.plusvalia) plusvaliaIa = Number(datosIA.plusvalia);
+        } else {
+          console.error("La IA no devolvió el formato esperado:", respuestaTexto);
+        }
 
       } catch (e) {
          console.error(`Error de IA:`, e);
