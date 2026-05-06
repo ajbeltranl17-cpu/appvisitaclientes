@@ -58,8 +58,14 @@ export const AgendarVisita = () => {
       });
 
       // ---> INICIO DE LA MAGIA EN LA NUBE <---
-      // Disparamos nuestra Serverless Function de Vercel en segundo plano (Fire and Forget)
-      fetch('/api/procesar-visita', {
+      // CAMBIO: Ahora mostramos un estado de carga mientras el cerebro trabaja.
+      // (Asumimos que ya tienes un estado 'isSubmitting' en tu componente, que veo que sí usas).
+      setIsSubmitting(true); 
+
+      // CAMBIO CRÍTICO: Usamos 'await' aquí. 
+      // El navegador ESPERARÁ a que Vercel termine antes de seguir.
+      // Esto tardará unos 5 a 8 segundos.
+      await fetch('/api/procesar-visita', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -68,8 +74,11 @@ export const AgendarVisita = () => {
           mapsUrl: mapsUrl,
           ubicacionTexto: ubicacion
         })
-      }).catch(err => console.error("Error al detonar el motor en Vercel:", err));
+      });
       // ---> FIN DE LA MAGIA EN LA NUBE <---
+
+      // B. Construimos la URL mágica con el ID real
+      const linkInvitacion = `${window.location.origin}/bienvenida/${docRef.id}`;
 
       // B. Construimos la URL mágica con el ID real
       const linkInvitacion = `${window.location.origin}/bienvenida/${docRef.id}`;
