@@ -3,11 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
-// Definimos qué datos esperamos recibir de Firebase
+// Agregamos el campo de la imagen que Vercel ahora nos manda
 interface VisitaData {
   clienteNombre: string;
   asesorNombre: string;
   propiedadUrl: string;
+  propiedadImagen?: string; 
 }
 
 export const Bienvenida = () => {
@@ -80,10 +81,11 @@ export const Bienvenida = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-8">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border-t-8 border-t-[#C5A059]">
         
-        {/* Imagen de Portada */}
+        {/* Imagen de Portada Dinámica */}
         <div className="h-48 sm:h-56 w-full relative">
           <img 
-            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+            // Aquí está la magia: Usamos la imagen extraída de tu web, o una por defecto si falla
+            src={visita.propiedadImagen || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
             alt="Propiedad" 
             className="w-full h-full object-cover"
           />
