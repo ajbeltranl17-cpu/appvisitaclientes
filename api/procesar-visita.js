@@ -77,33 +77,42 @@ export default async function handler(req, res) {
       try {
         const modelo = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
-        // El Prompt Maestro (La instrucción secreta para la IA)
+        // Le explicamos a la IA exactamente la estructura de tu diseño
         const promptMaster = `
-          Actúa como el mejor y más persuasivo consultor inmobiliario de Veracruz y Boca del Río.
-          Tengo una propiedad con estas referencias de ubicación: ${ubicacionTexto} y este link de mapa: ${mapsUrl}.
-          El precio estimado es: $${precioExtraido || 3500000} MXN.
+          Actúa como el mejor consultor inmobiliario de Veracruz y Boca del Río.
+          Ubicación: ${ubicacionTexto}. Link: ${mapsUrl}.
           
-          Necesito que me devuelvas EXACTAMENTE y ÚNICAMENTE un objeto JSON (sin comillas invertidas ni bloques de código extra) con dos cosas:
-          1. "analisis": Un párrafo de máximo 3 líneas redactado de forma hipnótica y persuasiva, destacando los beneficios de vivir o invertir ahí (plazas, escuelas, conectividad, estilo de vida). No hables de precios.
-          2. "plusvalia": Un número con un decimal que represente una tasa de plusvalía anual estimada realista para esa zona (ejemplo: 12.5).
-
-          Formato exacto esperado de respuesta (solo el JSON):
-          {"analisis": "texto aquí", "plusvalia": 14.2}
+          Necesito que me devuelvas ÚNICAMENTE un objeto JSON con los beneficios reales o muy probables de vivir ahí. 
+          El JSON debe tener exactamente esta estructura (crea 2 o 3 puntos cortos y persuasivos por categoría):
+          {
+            "educacion": ["Punto 1", "Punto 2"],
+            "comercio": ["Punto 1", "Punto 2"],
+            "salud": ["Punto 1", "Punto 2"],
+            "conectividad": ["Punto 1", "Punto 2"],
+            "plusvalia": 12.5
+          }
+          Asegúrate de que la plusvalia sea un número con un decimal. No uses markdown ni comillas invertidas, solo el JSON puro.
         `;
 
         const resultadoIA = await modelo.generateContent(promptMaster);
         const respuestaTexto = resultadoIA.response.text();
         
-        // Limpiamos la respuesta por si la IA le pone comillas de formato de código
         const jsonLimpio = respuestaTexto.replace(/```json/g, '').replace(/```/g, '').trim();
         const datosIA = JSON.parse(jsonLimpio);
 
-        if (datosIA.analisis) analisisIa = datosIA.analisis;
+        // Guardamos el objeto completo con las 4 categorías
+        if (datosIA.educacion) analisisIa = datosIA; 
         if (datosIA.plusvalia) plusvaliaIa = Number(datosIA.plusvalia);
 
       } catch (e) {
          console.error(`Error de IA para la visita ${visitaId}:`, e);
-         // Fallback por defecto si la IA falla
+         // Fallback con la estructura correcta por si la IA falla
+         analisisIa = {
+           educacion: ["Colegios de prestigio en la zona", "Fácil acceso a universidades"],
+           comercio: ["Centros comerciales a menos de 10 min", "Supermercados y tiendas exclusivas"],
+           salud: ["Hospitales de primer nivel cercanos", "Clínicas y farmacias 24/7"],
+           conectividad: ["Vías de acceso rápido", "Zona segura y transitable"]
+         };
       }
     }
 
