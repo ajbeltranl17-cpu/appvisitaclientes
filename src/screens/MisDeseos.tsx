@@ -9,16 +9,15 @@ export const MisDeseos = () => {
   const navigate = useNavigate();
 
   const [ubicacion, setUbicacion] = useState('Boca del Río');
-  
-  // NUEVO: Dos estados para el presupuesto
   const [presupuestoMin, setPresupuestoMin] = useState(2000000);
   const [presupuestoMax, setPresupuestoMax] = useState(5000000);
-  
   const [tipoPropiedad, setTipoPropiedad] = useState('Departamento');
   const [recamaras, setRecamaras] = useState(2);
   const [banos, setBanos] = useState(2);
   const [estacionamientos, setEstacionamientos] = useState(1);
-  const [antiguedad, setAntiguedad] = useState('Preventa');
+  
+  // CAMBIO COMERCIAL: Por defecto es Indistinto para abarcar más inventario
+  const [antiguedad, setAntiguedad] = useState('Indistinto');
   const [amenidadesSeleccionadas, setAmenidadesSeleccionadas] = useState<string[]>(['Alberca', 'Seguridad 24/7']);
   
   const [guardando, setGuardando] = useState(false);
@@ -26,7 +25,9 @@ export const MisDeseos = () => {
 
   const zonas = ['Veracruz', 'Boca del Río', 'Riviera Veracruzana', 'Medellín'];
   const tipos = ['Casa', 'Departamento', 'Terreno'];
-  const antiguedades = ['Preventa', 'Nueva', 'Usada'];
+  
+  // CAMBIO COMERCIAL: Nueva, Preventa, Indistinto
+  const antiguedades = ['Preventa', 'Nueva', 'Indistinto'];
   const amenidadesDisponibles = ['Alberca', 'Gimnasio', 'Seguridad 24/7', 'Elevador', 'Roof Garden', 'Pet Friendly', 'Área Infantil'];
 
   useEffect(() => {
@@ -40,10 +41,8 @@ export const MisDeseos = () => {
           const data = docSnap.data();
           if (data.deseos) {
             setUbicacion(data.deseos.ubicacion || ubicacion);
-            // Cargamos ambos presupuestos
             setPresupuestoMin(data.deseos.presupuestoMin || 2000000);
             setPresupuestoMax(data.deseos.presupuestoMax || data.deseos.presupuesto || 5000000);
-            
             setTipoPropiedad(data.deseos.tipoPropiedad || tipoPropiedad);
             setRecamaras(data.deseos.recamaras || recamaras);
             setBanos(data.deseos.banos || banos);
@@ -78,7 +77,7 @@ export const MisDeseos = () => {
       await updateDoc(docRef, {
         deseos: {
           ubicacion,
-          presupuestoMin, // Se guarda el rango completo
+          presupuestoMin,
           presupuestoMax,
           tipoPropiedad,
           recamaras,
@@ -103,9 +102,9 @@ export const MisDeseos = () => {
       `📍 *Ubicación:* ${ubicacion}\n` +
       `🏠 *Tipo:* ${tipoPropiedad}\n` +
       `💰 *Presupuesto:* De ${formatearMoneda(presupuestoMin)} a ${formatearMoneda(presupuestoMax)}\n` +
-      `🛌 *Recámaras:* ${recamaras}\n` +
-      `🚿 *Baños:* ${banos}\n` +
-      `🚗 *Estacionamientos:* ${estacionamientos}\n` +
+      `🛌 *Recámaras:* ${recamaras} o más\n` +
+      `🚿 *Baños:* ${banos} o más\n` +
+      `🚗 *Estacionamientos:* ${estacionamientos} o más\n` +
       `✨ *Estado:* ${antiguedad}\n` +
       `✅ *Amenidades:* ${amenidadesSeleccionadas.join(', ')}\n\n` +
       `¿Podrías ayudarme a encontrar opciones que coincidan?`;
@@ -128,10 +127,14 @@ export const MisDeseos = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           visitaId: idVisita,
-          presupuestoMin: presupuestoMin, // Mandamos ambos valores a Vercel
+          presupuestoMin: presupuestoMin,
           presupuestoMax: presupuestoMax,
           tipoPropiedad: tipoPropiedad,
-          ubicacionTexto: ubicacion
+          ubicacionTexto: ubicacion,
+          // Enviamos los datos para aplicar la regla "X o más"
+          recamaras: recamaras,
+          banos: banos,
+          estacionamientos: estacionamientos
         })
       });
       navigate(`/catalogo/${idVisita}`); 
@@ -228,7 +231,6 @@ export const MisDeseos = () => {
             </div>
           </div>
 
-          {/* RANGO DE PRESUPUESTO DOBLE */}
           <div className="space-y-5 pt-2 border-t border-gray-100">
             <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block">Rango de Inversión</label>
             
@@ -243,7 +245,6 @@ export const MisDeseos = () => {
                 onChange={(e) => {
                   const val = Number(e.target.value);
                   setPresupuestoMin(val);
-                  // Empuja el máximo si el mínimo lo rebasa
                   if (val > presupuestoMax) setPresupuestoMax(val);
                 }}
                 className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#00213b]"
@@ -261,7 +262,6 @@ export const MisDeseos = () => {
                 onChange={(e) => {
                   const val = Number(e.target.value);
                   setPresupuestoMax(val);
-                  // Empuja el mínimo si el máximo lo cruza hacia abajo
                   if (val < presupuestoMin) setPresupuestoMin(val);
                 }}
                 className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#C5A059]"
