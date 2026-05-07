@@ -22,8 +22,8 @@ export default async function handler(req, res) {
   try {
     let propiedadesInyectadas = [];
     const dominioWordPress = 'https://tuconexioninmobiliaria.com'; 
-    // Usamos la puerta correcta comprobada: properties
-    const wpUrl = `${dominioWordPress}/wp-json/wp/v2/properties?per_page=40`; 
+    // Subimos a 50 para que el embudo jale más inventario antes de filtrar
+    const wpUrl = `${dominioWordPress}/wp-json/wp/v2/properties?per_page=50`; 
 
     logDebug.push(`Llamando a: ${wpUrl}`);
     const wpRes = await fetch(wpUrl);
@@ -41,7 +41,6 @@ export default async function handler(req, res) {
             id: prop.id?.toString() || Math.random().toString(),
             titulo: prop.title?.rendered || 'Propiedad Inmobiliaria',
             precio: precioLimpio, 
-            // LEEMOS LA DISTRIBUCIÓN DESDE EL NUEVO PUENTE
             habitaciones: parseInt(prop.datos_app?.recamaras || prop.property_bedrooms || prop.fave_property_bedrooms) || 0,
             banos: parseFloat(prop.datos_app?.banos || prop.property_bathrooms || prop.fave_property_bathrooms) || 0,
             estacionamientos: parseInt(prop.datos_app?.estacionamientos || prop.property_garage || prop.fave_property_garage) || 0,
@@ -58,26 +57,53 @@ export default async function handler(req, res) {
         const ciudadBuscada = (ubicacionTexto || "").toLowerCase().trim();
 
         propiedadesInyectadas = propiedadesMapeadas.filter(p => {
+           // 1. FILTROS BÁSICOS
            const pasaPrecio = p.precio >= min && p.precio <= max;
            const pasaRecamaras = p.habitaciones >= recDeseadas;
            const pasaBanos = p.banos >= banosDeseados;
            const pasaEstacionamientos = p.estacionamientos >= estDeseados;
 
+           // 2. EL CEREBRO DE ZONAS LOCALES
            const tituloURL = (p.titulo + " " + p.url).toLowerCase();
-           let keyword = ciudadBuscada;
-           if (keyword.includes("boca")) keyword = "boca";
-           if (keyword.includes("riviera")) keyword = "riviera";
-           if (keyword.includes("medell")) keyword = "medell";
-           
-           const pasaUbicacion = tituloURL.includes(keyword) || keyword === "";
+           let pasaUbicacion = false;
 
-           // Mensajes espía para saber el motivo exacto del rechazo
+           if (ciudadBuscada.includes("riviera")) {
+             // Todas las palabras clave que significan "Riviera Veracruzana"
+             const keywordsRiviera = ["riviera", "tibur", "conchal", "dorado", "lomas", "mandara", "bello", "tajin", "mandinga", "sendero", "real",”rioja”];
+             pasaUbicacion = keywordsRiviera.some(kw => tituloURL.includes(kw));
+           } 
+           else if (ciudadBuscada.includes("boca")) {
+             // Palabras clave de Boca del Río
+             const keywordsBoca = ["boca", "costa de oro", "mocambo", "tampiquera", "virginia", "estatuto", "americas", "petrolera", "hoyo", "costa verde", ”graciano”, “morro”, “primero de mayo” ];
+             pasaUbicacion = keywordsBoca.some(kw => tituloURL.includes(kw));
+           }
+           else if (ciudadBuscada.includes("medell")) {
+             // Palabras clave de Medellín
+             const keywordsMedellin = ["medell", "puente moreno", "tejar", "arboledas", "playa de vacas", "dos lomas"];
+             pasaUbicacion = keywordsMedellin.some(kw => tituloURL.includes(kw));
+           }
+           else if (ciudadBuscada.includes("veracruz")) {
+             // Palabras clave del municipio de Veracruz
+             const keywordsVeracruz = ["veracruz", "reforma", "zaragoza", "centro", "norte", "floresta", "magon", "brisa", "pino"];
+             pasaUbicacion = keywordsVeracruz.some(kw => tituloURL.includes(kw));
+             
+             // Evitamos que "Veracruz" incluya a la Riviera Veracruzana por error
+             if (tituloURL.includes("riviera") || tituloURL.includes("tibur")) pasaUbicacion = false;
+           }
+           else {
+             // Si el cliente no puso zona, pasa todo
+             pasaUbicacion = true; 
+           }
+
+           // Mantenemos al espía vigilando
            if (!pasaPrecio && p.precio > 0) logDebug.push(`Rechazada por PRECIO: ${p.titulo} ($${p.precio})`);
-           else if (pasaPrecio && !pasaRecamaras) logDebug.push(`Rechazada por RECÁMARAS (Tiene ${p.habitaciones}, pediste ${recDeseadas}): ${p.titulo}`);
-           else if (pasaPrecio && pasaRecamaras && !pasaUbicacion) logDebug.push(`Rechazada por UBICACIÓN: ${p.titulo}`);
+           else if (pasaPrecio && !pasaRecamaras) logDebug.push(`Rechazada por RECÁMARAS (Tiene ${p.habitaciones}): ${p.titulo}`);
+           else if (pasaPrecio && pasaRecamaras && !pasaBanos) logDebug.push(`Rechazada por BAÑOS: ${p.titulo}`);
+           else if (pasaPrecio && pasaRecamaras && pasaBanos && !pasaUbicacion) logDebug.push(`Rechazada por UBICACIÓN (${ciudadBuscada}): ${p.titulo}`);
 
            return pasaPrecio && pasaRecamaras && pasaBanos && pasaEstacionamientos && pasaUbicacion;
         });
+        
         logDebug.push(`Total aprobadas para el catálogo: ${propiedadesInyectadas.length}`);
       }
     }
