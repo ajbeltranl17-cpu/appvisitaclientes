@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     let propiedadesInyectadas = [];
     const dominioWordPress = 'https://tuconexioninmobiliaria.com'; 
     // Subimos a 50 para que el embudo jale más inventario antes de filtrar
-    const wpUrl = `${dominioWordPress}/wp-json/wp/v2/properties?per_page=30`; 
+    const wpUrl = `${dominioWordPress}/wp-json/wp/v2/properties?per_page=20`; 
 
     logDebug.push(`Llamando a: ${wpUrl}`);
     const wpRes = await fetch(wpUrl);
