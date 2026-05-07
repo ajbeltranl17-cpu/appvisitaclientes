@@ -25,6 +25,7 @@ export const MatrizComparativa = () => {
           
           if (data.propiedadesComparar && data.propiedadesComparar.length > 0) {
             const propiedadesFormateadas = data.propiedadesComparar.map((prop: any, index: number) => {
+              
               const metrosEstimados = prop.m2 || Math.floor((prop.precio / 25000));
               const precioM2Calculado = prop.precio && metrosEstimados ? Math.floor(prop.precio / metrosEstimados) : 0;
               
@@ -36,7 +37,6 @@ export const MatrizComparativa = () => {
                 precioM2: precioM2Calculado,
                 plusvalia: (10 + Math.random() * 8).toFixed(1), 
                 compatibilidad: Math.floor(85 + Math.random() * 13),
-                amenidades: ['pool', 'security', 'fitness_center', 'park'].slice(0, Math.floor(Math.random() * 3) + 2), 
                 img: prop.imagen || prop.img || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800',
                 etiqueta: index === 0 ? 'MEJOR VALOR' : '' 
               };
@@ -67,9 +67,11 @@ export const MatrizComparativa = () => {
   const contactarAsesor = (prop: any) => {
     const numeroAsesor = ""; 
     const mensaje = `¡Hola! Estuve analizando la Matriz Comparativa y me interesa agendar una visita para: *${prop.titulo}*.`;
+    
     const url = numeroAsesor 
       ? `https://wa.me/${numeroAsesor}?text=${encodeURIComponent(mensaje)}` 
       : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+      
     window.open(url, '_blank');
   };
 
@@ -108,6 +110,7 @@ export const MatrizComparativa = () => {
       />
 
       <main className="flex-1 w-full max-w-6xl mx-auto py-6 space-y-6">
+        
         <section className="px-6">
           <h1 className="text-3xl font-black text-[#00213b]">Matriz Comparativa</h1>
           <p className="text-gray-500 text-sm mt-2">Análisis detallado de opciones de inversión seleccionadas para tu perfil.</p>
@@ -182,21 +185,6 @@ export const MatrizComparativa = () => {
                             <div className="bg-[#C5A059] h-full rounded-full" style={{width: `${prop.compatibilidad}%`}}></div>
                          </div>
                          <span className="text-xs font-black text-[#00213b]">{prop.compatibilidad}/100</span>
-                      </div>
-                    </td>
-                  ))}
-                </tr>
-
-                <tr>
-                  <td className="sticky left-0 z-10 bg-gray-50 w-[90px] md:w-40 py-6 px-2 text-[10px] md:text-xs font-black text-[#00213b] uppercase tracking-widest border-r border-transparent shadow-[6px_0_15px_-4px_rgba(0,0,0,0.08)] align-middle">Amenidades</td>
-                  {propiedadesAComparar.map(prop => (
-                    <td key={`amenidades-${prop.id}`} className="bg-white border-b border-gray-100 text-center py-6 px-4">
-                      <div className="flex justify-center gap-2">
-                         {prop.amenidades.map((icon: string, i: number) => (
-                           <div key={i} className="w-9 h-9 rounded-xl bg-gray-50 text-[#00213b] flex items-center justify-center border border-gray-100">
-                             <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                           </div>
-                         ))}
                       </div>
                     </td>
                   ))}
