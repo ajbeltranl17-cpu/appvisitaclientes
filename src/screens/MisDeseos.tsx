@@ -8,9 +8,12 @@ export const MisDeseos = () => {
   const { idVisita } = useParams();
   const navigate = useNavigate();
 
-  // ESTADOS ACTUALIZADOS
   const [ubicacion, setUbicacion] = useState('Boca del Río');
-  const [presupuesto, setPresupuesto] = useState(3500000);
+  
+  // NUEVO: Dos estados para el presupuesto
+  const [presupuestoMin, setPresupuestoMin] = useState(2000000);
+  const [presupuestoMax, setPresupuestoMax] = useState(5000000);
+  
   const [tipoPropiedad, setTipoPropiedad] = useState('Departamento');
   const [recamaras, setRecamaras] = useState(2);
   const [banos, setBanos] = useState(2);
@@ -21,7 +24,6 @@ export const MisDeseos = () => {
   const [guardando, setGuardando] = useState(false);
   const [buscandoWP, setBuscandoWP] = useState(false);
 
-  // Zonas predefinidas
   const zonas = ['Veracruz', 'Boca del Río', 'Riviera Veracruzana', 'Medellín'];
   const tipos = ['Casa', 'Departamento', 'Terreno'];
   const antiguedades = ['Preventa', 'Nueva', 'Usada'];
@@ -38,7 +40,10 @@ export const MisDeseos = () => {
           const data = docSnap.data();
           if (data.deseos) {
             setUbicacion(data.deseos.ubicacion || ubicacion);
-            setPresupuesto(data.deseos.presupuesto || presupuesto);
+            // Cargamos ambos presupuestos
+            setPresupuestoMin(data.deseos.presupuestoMin || 2000000);
+            setPresupuestoMax(data.deseos.presupuestoMax || data.deseos.presupuesto || 5000000);
+            
             setTipoPropiedad(data.deseos.tipoPropiedad || tipoPropiedad);
             setRecamaras(data.deseos.recamaras || recamaras);
             setBanos(data.deseos.banos || banos);
@@ -73,7 +78,8 @@ export const MisDeseos = () => {
       await updateDoc(docRef, {
         deseos: {
           ubicacion,
-          presupuesto,
+          presupuestoMin, // Se guarda el rango completo
+          presupuestoMax,
           tipoPropiedad,
           recamaras,
           banos,
@@ -92,11 +98,11 @@ export const MisDeseos = () => {
   const manejarCompartirWhatsApp = async () => {
     await guardarEnBaseDeDatos(); 
     
-    const numeroAsesor = ""; // Conectaremos el número real del asesor en la siguiente fase
+    const numeroAsesor = ""; 
     const mensaje = `¡Hola! He definido mis deseos para mi próxima propiedad:\n\n` +
       `📍 *Ubicación:* ${ubicacion}\n` +
       `🏠 *Tipo:* ${tipoPropiedad}\n` +
-      `💰 *Presupuesto:* ${formatearMoneda(presupuesto)}\n` +
+      `💰 *Presupuesto:* De ${formatearMoneda(presupuestoMin)} a ${formatearMoneda(presupuestoMax)}\n` +
       `🛌 *Recámaras:* ${recamaras}\n` +
       `🚿 *Baños:* ${banos}\n` +
       `🚗 *Estacionamientos:* ${estacionamientos}\n` +
@@ -122,7 +128,8 @@ export const MisDeseos = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           visitaId: idVisita,
-          presupuestoMax: presupuesto,
+          presupuestoMin: presupuestoMin, // Mandamos ambos valores a Vercel
+          presupuestoMax: presupuestoMax,
           tipoPropiedad: tipoPropiedad,
           ubicacionTexto: ubicacion
         })
@@ -187,7 +194,6 @@ export const MisDeseos = () => {
 
         <div className="space-y-6 bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
           
-          {/* NUEVA SECCIÓN DE ZONA (BOTONES) */}
           <div className="space-y-3">
             <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block">Zona de Interés</label>
             <div className="grid grid-cols-2 gap-2">
@@ -222,21 +228,48 @@ export const MisDeseos = () => {
             </div>
           </div>
 
-          {/* NUEVO RANGO DE PRESUPUESTO (2M a 15M) */}
-          <div className="space-y-3 pt-2">
-            <div className="flex justify-between items-center">
-              <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest">Presupuesto Máximo</label>
-              <span className="font-black text-[#C5A059] text-lg">{formatearMoneda(presupuesto)}</span>
+          {/* RANGO DE PRESUPUESTO DOBLE */}
+          <div className="space-y-5 pt-2 border-t border-gray-100">
+            <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block">Rango de Inversión</label>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-gray-400 uppercase">Mínimo</span>
+                <span className="font-black text-[#00213b]">{formatearMoneda(presupuestoMin)}</span>
+              </div>
+              <input 
+                type="range" min="2000000" max="15000000" step="100000"
+                value={presupuestoMin} 
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setPresupuestoMin(val);
+                  // Empuja el máximo si el mínimo lo rebasa
+                  if (val > presupuestoMax) setPresupuestoMax(val);
+                }}
+                className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#00213b]"
+              />
             </div>
-            <input 
-              type="range" min="2000000" max="15000000" step="100000"
-              value={presupuesto} onChange={(e) => setPresupuesto(Number(e.target.value))}
-              className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#C5A059]"
-            />
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-gray-400 uppercase">Máximo</span>
+                <span className="font-black text-[#C5A059] text-lg">{formatearMoneda(presupuestoMax)}</span>
+              </div>
+              <input 
+                type="range" min="2000000" max="15000000" step="100000"
+                value={presupuestoMax} 
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setPresupuestoMax(val);
+                  // Empuja el mínimo si el máximo lo cruza hacia abajo
+                  if (val < presupuestoMin) setPresupuestoMin(val);
+                }}
+                className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#C5A059]"
+              />
+            </div>
           </div>
         </div>
 
-        {/* RESTO DEL FORMULARIO IGUAL... */}
         <div className="space-y-5 bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
           <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest block mb-1">Distribución Ideal</label>
           <div className="space-y-3">
