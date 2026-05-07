@@ -18,6 +18,7 @@ export const CatalogoPropiedades = () => {
     
     const docRef = doc(db, 'visitas', idVisita);
     
+    // El Espía de Firebase
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -33,7 +34,16 @@ export const CatalogoPropiedades = () => {
       }
     });
 
-    return () => unsubscribe();
+    // TEMPORIZADOR DE SEGURIDAD (12 SEGUNDOS)
+    // Si después de 12 segundos la búsqueda no ha terminado, la detenemos a la fuerza
+    const seguroAntiBloqueo = setTimeout(() => {
+      setBuscando(false);
+    }, 12000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(seguroAntiBloqueo); // Limpiamos el temporizador al salir
+    };
   }, [idVisita]);
 
   const toggleSeleccion = (id: string) => {
@@ -75,7 +85,6 @@ export const CatalogoPropiedades = () => {
     }
   };
 
-  // 1. PANTALLA DE CARGA
   if (buscando) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center font-sans">
@@ -92,7 +101,6 @@ export const CatalogoPropiedades = () => {
     );
   }
 
-  // 2. PANTALLA CUANDO EL INVENTARIO ES CERO (NUEVA)
   if (!buscando && propiedades.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -131,7 +139,6 @@ export const CatalogoPropiedades = () => {
     );
   }
 
-  // 3. PANTALLA PRINCIPAL CON INVENTARIO
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans pb-32">
       <EncabezadoGlobal 
@@ -221,7 +228,6 @@ export const CatalogoPropiedades = () => {
         </div>
       </main>
 
-      {/* Barra Flotante Inferior de Comparativa */}
       {seleccionados.length > 0 && (
         <div className="fixed bottom-6 left-0 w-full px-4 z-50 flex justify-center pointer-events-none">
           <div className="bg-[#00213b] text-white rounded-[2rem] p-4 shadow-[0_10px_40px_rgba(0,33,59,0.3)] flex items-center justify-between w-full max-w-sm pointer-events-auto border border-white/10">
