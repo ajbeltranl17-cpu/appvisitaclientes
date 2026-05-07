@@ -17,108 +17,81 @@ export default async function handler(req, res) {
   const { visitaId, presupuestoMin, presupuestoMax, ubicacionTexto, recamaras, banos, estacionamientos } = req.body;
   if (!visitaId) return res.status(400).json({ error: 'Falta el ID' });
 
-  // 🕵️‍♂️ AQUÍ GUARDAREMOS LAS PISTAS
   let logDebug = []; 
 
   try {
     let propiedadesInyectadas = [];
     const dominioWordPress = 'https://tuconexioninmobiliaria.com'; 
+    // Usamos la puerta correcta comprobada: properties
+    const wpUrl = `${dominioWordPress}/wp-json/wp/v2/properties?per_page=40`; 
+
+    logDebug.push(`Llamando a: ${wpUrl}`);
+    const wpRes = await fetch(wpUrl);
     
-    // 1. INTENTAMOS AMBAS PUERTAS PARA NO FALLAR
-    const endpoints = ['properties', 'property'];
-    let wpData = null;
+    if (wpRes.ok) {
+      const wpData = await wpRes.json();
+      if (Array.isArray(wpData) && wpData.length > 0) {
+        
+        const propiedadesMapeadas = wpData.map(prop => {
+          const precioRaw = prop.datos_app?.precio_real || prop.houzez_price || 0;
+          const precioLimpio = parseInt(String(precioRaw).replace(/[^0-9]/g, ''), 10) || 0;
+          const imagenReal = prop.datos_app?.imagen_real || prop.featured_image_src || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800';
 
-    for (let ep of endpoints) {
-       const wpUrl = `${dominioWordPress}/wp-json/wp/v2/${ep}?per_page=40`; 
-       logDebug.push(`Buscando en: ${wpUrl}`);
-       try {
-         const wpRes = await fetch(wpUrl);
-         if (wpRes.ok) {
-           const data = await wpRes.json();
-           if (Array.isArray(data) && data.length > 0) {
-             wpData = data;
-             logDebug.push(`¡Éxito! Encontramos ${data.length} propiedades en la puerta /${ep}`);
-             break; // Rompe el ciclo porque ya encontró la puerta correcta
-           } else {
-             logDebug.push(`La puerta /${ep} está vacía.`);
-           }
-         } else {
-           logDebug.push(`La puerta /${ep} dio error de conexión.`);
-         }
-       } catch (e) {
-         logDebug.push(`Fallo técnico en /${ep}: ${e.message}`);
-       }
-    }
+          return {
+            id: prop.id?.toString() || Math.random().toString(),
+            titulo: prop.title?.rendered || 'Propiedad Inmobiliaria',
+            precio: precioLimpio, 
+            // LEEMOS LA DISTRIBUCIÓN DESDE EL NUEVO PUENTE
+            habitaciones: parseInt(prop.datos_app?.recamaras || prop.property_bedrooms || prop.fave_property_bedrooms) || 0,
+            banos: parseFloat(prop.datos_app?.banos || prop.property_bathrooms || prop.fave_property_bathrooms) || 0,
+            estacionamientos: parseInt(prop.datos_app?.estacionamientos || prop.property_garage || prop.fave_property_garage) || 0,
+            imagen: imagenReal,
+            url: prop.link || dominioWordPress
+          };
+        });
 
-    if (wpData) {
-      logDebug.push("Traduciendo datos de WordPress a la App...");
-      const propiedadesMapeadas = wpData.map(prop => {
-        // Leemos el precio que nos da el plugin que instalaste (o el default)
-        const precioRaw = prop.datos_app?.precio_real || prop.houzez_price || prop.meta?.houzez_price || 0;
-        const precioLimpio = parseInt(String(precioRaw).replace(/[^0-9]/g, ''), 10) || 0;
-        const imagenReal = prop.datos_app?.imagen_real || prop.featured_image_src || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800';
+        const min = Number(presupuestoMin) || 0;
+        const max = Number(presupuestoMax) || 999000000;
+        const recDeseadas = Number(recamaras) || 1;
+        const banosDeseados = Number(banos) || 1;
+        const estDeseados = Number(estacionamientos) || 0;
+        const ciudadBuscada = (ubicacionTexto || "").toLowerCase().trim();
 
-        return {
-          id: prop.id?.toString() || Math.random().toString(),
-          titulo: prop.title?.rendered || 'Propiedad',
-          precio: precioLimpio, 
-          habitaciones: parseInt(prop.property_bedrooms || prop.meta?.property_bedrooms || prop.fave_property_bedrooms) || 0,
-          banos: parseFloat(prop.property_bathrooms || prop.meta?.property_bathrooms || prop.fave_property_bathrooms) || 0,
-          estacionamientos: parseInt(prop.property_garage || prop.meta?.property_garage || prop.fave_property_garage) || 0,
-          imagen: imagenReal,
-          url: prop.link || dominioWordPress
-        };
-      });
+        propiedadesInyectadas = propiedadesMapeadas.filter(p => {
+           const pasaPrecio = p.precio >= min && p.precio <= max;
+           const pasaRecamaras = p.habitaciones >= recDeseadas;
+           const pasaBanos = p.banos >= banosDeseados;
+           const pasaEstacionamientos = p.estacionamientos >= estDeseados;
 
-      // Vemos si sí está leyendo los precios
-      if (propiedadesMapeadas.length > 0) {
-         logDebug.push(`Ejemplo leído: ${propiedadesMapeadas[0].titulo} | Precio: $${propiedadesMapeadas[0].precio} | Rec: ${propiedadesMapeadas[0].habitaciones}`);
+           const tituloURL = (p.titulo + " " + p.url).toLowerCase();
+           let keyword = ciudadBuscada;
+           if (keyword.includes("boca")) keyword = "boca";
+           if (keyword.includes("riviera")) keyword = "riviera";
+           if (keyword.includes("medell")) keyword = "medell";
+           
+           const pasaUbicacion = tituloURL.includes(keyword) || keyword === "";
+
+           // Mensajes espía para saber el motivo exacto del rechazo
+           if (!pasaPrecio && p.precio > 0) logDebug.push(`Rechazada por PRECIO: ${p.titulo} ($${p.precio})`);
+           else if (pasaPrecio && !pasaRecamaras) logDebug.push(`Rechazada por RECÁMARAS (Tiene ${p.habitaciones}, pediste ${recDeseadas}): ${p.titulo}`);
+           else if (pasaPrecio && pasaRecamaras && !pasaUbicacion) logDebug.push(`Rechazada por UBICACIÓN: ${p.titulo}`);
+
+           return pasaPrecio && pasaRecamaras && pasaBanos && pasaEstacionamientos && pasaUbicacion;
+        });
+        logDebug.push(`Total aprobadas para el catálogo: ${propiedadesInyectadas.length}`);
       }
-
-      // APLICAMOS FILTROS DEL CLIENTE
-      const min = Number(presupuestoMin) || 0;
-      const max = Number(presupuestoMax) || 999000000;
-      const recDeseadas = Number(recamaras) || 1;
-      const banosDeseados = Number(banos) || 1;
-      const estDeseados = Number(estacionamientos) || 0;
-      const ciudadBuscada = (ubicacionTexto || "").toLowerCase().trim();
-
-      propiedadesInyectadas = propiedadesMapeadas.filter(p => {
-         const pasaPrecio = p.precio >= min && p.precio <= max;
-         const pasaRecamaras = p.habitaciones >= recDeseadas;
-         const pasaBanos = p.banos >= banosDeseados;
-         const pasaEstacionamientos = p.estacionamientos >= estDeseados;
-
-         const tituloURL = (p.titulo + " " + p.url).toLowerCase();
-         let keyword = ciudadBuscada;
-         if (keyword.includes("boca")) keyword = "boca";
-         if (keyword.includes("riviera")) keyword = "riviera";
-         if (keyword.includes("medell")) keyword = "medell";
-         
-         const pasaUbicacion = tituloURL.includes(keyword) || keyword === "";
-
-         // Si rechaza por precio, que nos diga por qué
-         if (!pasaPrecio && p.precio > 0) logDebug.push(`Rechazada por precio: ${p.titulo} ($${p.precio})`);
-
-         return pasaPrecio && pasaRecamaras && pasaBanos && pasaEstacionamientos && pasaUbicacion;
-      });
-
-      logDebug.push(`Total de propiedades que pasaron la prueba: ${propiedadesInyectadas.length}`);
-    } else {
-      logDebug.push("WordPress no mandó datos.");
     }
 
-    // 💾 GUARDAMOS EN FIREBASE JUNTO CON EL REPORTE ESPÍA
     await db.collection('visitas').doc(visitaId).update({
       opcionesCatalogo: propiedadesInyectadas,
       busquedaCompletada: true,
-      debug_log: logDebug // <- ESTO NOS DIRÁ LA VERDAD ABSOLUTA
+      debug_log: logDebug
     });
 
     return res.status(200).json({ success: true, resultados: propiedadesInyectadas.length });
 
   } catch (error) {
-    logDebug.push(`Error Fatal: ${error.message}`);
+    logDebug.push(`Error: ${error.message}`);
     await db.collection('visitas').doc(visitaId).update({ debug_log: logDebug });
     return res.status(500).json({ error: error.message });
   }
