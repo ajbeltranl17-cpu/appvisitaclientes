@@ -22,92 +22,100 @@ export default async function handler(req, res) {
   try {
     let propiedadesInyectadas = [];
     const dominioWordPress = 'https://tuconexioninmobiliaria.com'; 
-    // Subimos a 50 para que el embudo jale más inventario antes de filtrar
-    const wpUrl = `${dominioWordPress}/wp-json/wp/v2/properties?per_page=20`; 
-
-    logDebug.push(`Llamando a: ${wpUrl}`);
-    const wpRes = await fetch(wpUrl);
     
-    if (wpRes.ok) {
-      const wpData = await wpRes.json();
-      if (Array.isArray(wpData) && wpData.length > 0) {
-        
-        const propiedadesMapeadas = wpData.map(prop => {
-          const precioRaw = prop.datos_app?.precio_real || prop.houzez_price || 0;
-          const precioLimpio = parseInt(String(precioRaw).replace(/[^0-9]/g, ''), 10) || 0;
-          const imagenReal = prop.datos_app?.imagen_real || prop.featured_image_src || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800';
+    // 🔥 EL TRUCO DE VELOCIDAD: Le pedimos SOLO los campos exactos que ocupamos (&_fields=...)
+    const camposRequeridos = 'id,title,link,datos_app,houzez_price,property_bedrooms,property_bathrooms,property_garage,featured_image_src';
+    const wpUrl = `${dominioWordPress}/wp-json/wp/v2/properties?per_page=40&_fields=${camposRequeridos}`; 
 
-          return {
-            id: prop.id?.toString() || Math.random().toString(),
-            titulo: prop.title?.rendered || 'Propiedad Inmobiliaria',
-            precio: precioLimpio, 
-            habitaciones: parseInt(prop.datos_app?.recamaras || prop.property_bedrooms || prop.fave_property_bedrooms) || 0,
-            banos: parseFloat(prop.datos_app?.banos || prop.property_bathrooms || prop.fave_property_bathrooms) || 0,
-            estacionamientos: parseInt(prop.datos_app?.estacionamientos || prop.property_garage || prop.fave_property_garage) || 0,
-            imagen: imagenReal,
-            url: prop.link || dominioWordPress
-          };
-        });
+    logDebug.push(`Llamando versión ultrarrápida: ${wpUrl}`);
+    
+    // 🛡️ PARACAÍDAS ANTI-APAGÓN: Límite interno de 8.5 segundos
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8500);
 
-        const min = Number(presupuestoMin) || 0;
-        const max = Number(presupuestoMax) || 999000000;
-        const recDeseadas = Number(recamaras) || 1;
-        const banosDeseados = Number(banos) || 1;
-        const estDeseados = Number(estacionamientos) || 0;
-        const ciudadBuscada = (ubicacionTexto || "").toLowerCase().trim();
+    try {
+      const wpRes = await fetch(wpUrl, { signal: controller.signal });
+      clearTimeout(timeoutId); // Si responde a tiempo, quitamos el límite
 
-        propiedadesInyectadas = propiedadesMapeadas.filter(p => {
-           // 1. FILTROS BÁSICOS
-           const pasaPrecio = p.precio >= min && p.precio <= max;
-           const pasaRecamaras = p.habitaciones >= recDeseadas;
-           const pasaBanos = p.banos >= banosDeseados;
-           const pasaEstacionamientos = p.estacionamientos >= estDeseados;
+      if (wpRes.ok) {
+        const wpData = await wpRes.json();
+        if (Array.isArray(wpData) && wpData.length > 0) {
+          
+          const propiedadesMapeadas = wpData.map(prop => {
+            const precioRaw = prop.datos_app?.precio_real || prop.houzez_price || 0;
+            const precioLimpio = parseInt(String(precioRaw).replace(/[^0-9]/g, ''), 10) || 0;
+            const imagenReal = prop.datos_app?.imagen_real || prop.featured_image_src || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800';
 
-           // 2. EL CEREBRO DE ZONAS LOCALES
-           const tituloURL = (p.titulo + " " + p.url).toLowerCase();
-           let pasaUbicacion = false;
+            return {
+              id: prop.id?.toString() || Math.random().toString(),
+              titulo: prop.title?.rendered || 'Propiedad Inmobiliaria',
+              precio: precioLimpio, 
+              habitaciones: parseInt(prop.datos_app?.recamaras || prop.property_bedrooms) || 0,
+              banos: parseFloat(prop.datos_app?.banos || prop.property_bathrooms) || 0,
+              estacionamientos: parseInt(prop.datos_app?.estacionamientos || prop.property_garage) || 0,
+              imagen: imagenReal,
+              url: prop.link || dominioWordPress
+            };
+          });
 
-           if (ciudadBuscada.includes("riviera")) {
-             // Todas las palabras clave que significan "Riviera Veracruzana"
-             const keywordsRiviera = ["riviera", "tibur", "conchal", "dorado", "lomas", "mandara", "bello", "tajin", "mandinga", "sendero", "real",”rioja”];
-             pasaUbicacion = keywordsRiviera.some(kw => tituloURL.includes(kw));
-           } 
-           else if (ciudadBuscada.includes("boca")) {
-             // Palabras clave de Boca del Río
-             const keywordsBoca = ["boca", "costa de oro", "mocambo", "tampiquera", "virginia", "estatuto", "americas", "petrolera", "hoyo", "costa verde", ”graciano”, “morro”, “primero de mayo” ];
-             pasaUbicacion = keywordsBoca.some(kw => tituloURL.includes(kw));
-           }
-           else if (ciudadBuscada.includes("medell")) {
-             // Palabras clave de Medellín
-             const keywordsMedellin = ["medell", "puente moreno", "tejar", "arboledas", "playa de vacas", "dos lomas"];
-             pasaUbicacion = keywordsMedellin.some(kw => tituloURL.includes(kw));
-           }
-           else if (ciudadBuscada.includes("veracruz")) {
-             // Palabras clave del municipio de Veracruz
-             const keywordsVeracruz = ["veracruz", "reforma", "zaragoza", "centro", "norte", "floresta", "magon", "brisa", "pino"];
-             pasaUbicacion = keywordsVeracruz.some(kw => tituloURL.includes(kw));
-             
-             // Evitamos que "Veracruz" incluya a la Riviera Veracruzana por error
-             if (tituloURL.includes("riviera") || tituloURL.includes("tibur")) pasaUbicacion = false;
-           }
-           else {
-             // Si el cliente no puso zona, pasa todo
-             pasaUbicacion = true; 
-           }
+          const min = Number(presupuestoMin) || 0;
+          const max = Number(presupuestoMax) || 999000000;
+          const recDeseadas = Number(recamaras) || 1;
+          const banosDeseados = Number(banos) || 1;
+          const estDeseados = Number(estacionamientos) || 0;
+          const ciudadBuscada = (ubicacionTexto || "").toLowerCase().trim();
 
-           // Mantenemos al espía vigilando
-           if (!pasaPrecio && p.precio > 0) logDebug.push(`Rechazada por PRECIO: ${p.titulo} ($${p.precio})`);
-           else if (pasaPrecio && !pasaRecamaras) logDebug.push(`Rechazada por RECÁMARAS (Tiene ${p.habitaciones}): ${p.titulo}`);
-           else if (pasaPrecio && pasaRecamaras && !pasaBanos) logDebug.push(`Rechazada por BAÑOS: ${p.titulo}`);
-           else if (pasaPrecio && pasaRecamaras && pasaBanos && !pasaUbicacion) logDebug.push(`Rechazada por UBICACIÓN (${ciudadBuscada}): ${p.titulo}`);
+          propiedadesInyectadas = propiedadesMapeadas.filter(p => {
+             const pasaPrecio = p.precio >= min && p.precio <= max;
+             const pasaRecamaras = p.habitaciones >= recDeseadas;
+             const pasaBanos = p.banos >= banosDeseados;
+             const pasaEstacionamientos = p.estacionamientos >= estDeseados;
 
-           return pasaPrecio && pasaRecamaras && pasaBanos && pasaEstacionamientos && pasaUbicacion;
-        });
-        
-        logDebug.push(`Total aprobadas para el catálogo: ${propiedadesInyectadas.length}`);
+             const tituloURL = (p.titulo + " " + p.url).toLowerCase();
+             let pasaUbicacion = false;
+
+             if (ciudadBuscada.includes("riviera")) {
+               const keywordsRiviera = ["riviera", "tibur", "conchal", "dorado", "lomas", "mandara", "bello", "tajin", "mandinga", "sendero", "real"];
+               pasaUbicacion = keywordsRiviera.some(kw => tituloURL.includes(kw));
+             } 
+             else if (ciudadBuscada.includes("boca")) {
+               const keywordsBoca = ["boca", "costa de oro", "mocambo", "tampiquera", "virginia", "reforma", "estatuto", "americas", "petrolera", "hoyo", "tampico"];
+               pasaUbicacion = keywordsBoca.some(kw => tituloURL.includes(kw));
+             }
+             else if (ciudadBuscada.includes("medell")) {
+               const keywordsMedellin = ["medell", "puente moreno", "tejar", "arboledas", "playa de vacas", "dos lomas"];
+               pasaUbicacion = keywordsMedellin.some(kw => tituloURL.includes(kw));
+             }
+             else if (ciudadBuscada.includes("veracruz")) {
+               const keywordsVeracruz = ["veracruz", "reforma", "zaragoza", "centro", "norte", "floresta", "magon", "brisa", "pino"];
+               pasaUbicacion = keywordsVeracruz.some(kw => tituloURL.includes(kw));
+               if (tituloURL.includes("riviera") || tituloURL.includes("tibur")) pasaUbicacion = false;
+             }
+             else { pasaUbicacion = true; }
+
+             if (!pasaPrecio && p.precio > 0) logDebug.push(`Rechazo Precio: ${p.titulo} ($${p.precio})`);
+             else if (pasaPrecio && !pasaRecamaras) logDebug.push(`Rechazo Rec: ${p.titulo}`);
+             else if (pasaPrecio && pasaRecamaras && !pasaBanos) logDebug.push(`Rechazo Baños: ${p.titulo}`);
+             else if (pasaPrecio && pasaRecamaras && pasaBanos && !pasaUbicacion) logDebug.push(`Rechazo Zona (${ciudadBuscada}): ${p.titulo}`);
+
+             return pasaPrecio && pasaRecamaras && pasaBanos && pasaEstacionamientos && pasaUbicacion;
+          });
+          
+          logDebug.push(`Aprobadas: ${propiedadesInyectadas.length}`);
+        }
+      } else {
+         logDebug.push(`WordPress respondió con error: ${wpRes.status}`);
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        logDebug.push("⚠️ WordPress tardó más de 8.5 segs en enviar la lista. Abortamos para no congelar la App.");
+      } else {
+        logDebug.push(`⚠️ Error de conexión: ${fetchError.message}`);
       }
     }
 
+    // AHORA SÍ GUARDAMOS SEGUROS EN FIREBASE
     await db.collection('visitas').doc(visitaId).update({
       opcionesCatalogo: propiedadesInyectadas,
       busquedaCompletada: true,
@@ -117,7 +125,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, resultados: propiedadesInyectadas.length });
 
   } catch (error) {
-    logDebug.push(`Error: ${error.message}`);
+    logDebug.push(`Error Fatal en Vercel: ${error.message}`);
     await db.collection('visitas').doc(visitaId).update({ debug_log: logDebug });
     return res.status(500).json({ error: error.message });
   }
