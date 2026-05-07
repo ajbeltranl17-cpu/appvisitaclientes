@@ -19,7 +19,7 @@ export const CalculadoraPlusvalia = () => {
 
   // Datos Base
   const [precioOriginal, setPrecioOriginal] = useState(3400000);
-  const [zonaAnalizada, setZonaAnalizada] = useState('Veracruz / Boca del Río');
+  const [zonaAnalizada, setZonaAnalizada] = useState('Veracruz');
   
   const [tasaInflacion, setTasaInflacion] = useState(4.5); 
   const [anos, setAnos] = useState(5); 
@@ -27,9 +27,6 @@ export const CalculadoraPlusvalia = () => {
 
   const [valorFuturo, setValorFuturo] = useState(0);
   const [valorInflacion, setValorInflacion] = useState(0);
-
-  // 1. Tasa base fija (Fase 1: Tubería conectada, Fase 2: Vendrá del backend)
-  const tasaBaseZona = 7.5; 
 
   // Conexión a Firebase para extraer datos del cliente
   useEffect(() => {
@@ -52,7 +49,6 @@ export const CalculadoraPlusvalia = () => {
         console.error("Error al cargar datos de plusvalía:", error);
       } finally {
         setLoading(false);
-        // Simulamos la evaluación de mercado de la IA (2.5 segundos)
         setTimeout(() => setAnalizandoIA(false), 2500);
       }
     };
@@ -60,26 +56,39 @@ export const CalculadoraPlusvalia = () => {
     fetchVisita();
   }, [idVisita]);
 
-  // Lógica de ajuste dinámico integral (Zona + Estado + Tiempo)
+  // Lógica de ajuste dinámico integral (Inteligencia de Zona del Mercado de Veracruz)
   const obtenerTasaAjustada = () => {
-    let tasa = tasaBaseZona;
+    let tasaBase = 8.0; // Tasa por defecto si la zona no coincide
+    const zonaLow = zonaAnalizada.toLowerCase();
+
+    // 1. Tasa base por zona según datos del mercado
+    if (zonaLow.includes('boca')) {
+      tasaBase = 13.5; // Rango 12-15
+    } else if (zonaLow.includes('riviera') || zonaLow.includes('conchal') || zonaLow.includes('tibur') || zonaLow.includes('dorado')) {
+      tasaBase = 13.5; // Rango 12-15
+    } else if (zonaLow.includes('medell') || zonaLow.includes('puente moreno') || zonaLow.includes('playa de vacas')) {
+      tasaBase = 7.0; // Rango 6-8
+    } else if (zonaLow.includes('veracruz')) {
+      tasaBase = 8.0; // Rango 7-9
+    }
+
+    let tasaFinal = tasaBase;
 
     // 2. Ajuste por estado de la propiedad
-    if (estadoPropiedad === 'Preventa') tasa += 3.0; // Bono por riesgo/obra
-    if (estadoPropiedad === 'Seminuevo') tasa -= 1.5; // Ajuste por depreciación física
+    if (estadoPropiedad === 'Preventa') tasaFinal += 3.0; // Bono por riesgo/obra
+    if (estadoPropiedad === 'Seminuevo') tasaFinal -= 1.5; // Ajuste por depreciación física
 
     // 3. Ajuste por horizonte de tiempo
     const ajusteTiempo = (anos - 5) * 0.1; 
-    tasa += ajusteTiempo;
+    tasaFinal += ajusteTiempo;
 
-    // Aseguramos que la tasa tenga lógica financiera (no menor a inflación, no mayor a topes irreales)
-    return Math.max(3.0, Math.min(18.0, Number(tasa.toFixed(2))));
+    // Aseguramos límites lógicos
+    return Math.max(3.0, Math.min(18.0, Number(tasaFinal.toFixed(1))));
   };
 
   const tasaPlusvalia = obtenerTasaAjustada();
 
   useEffect(() => {
-    // Calculamos el valor futuro usando la tasa dinámicamente ajustada
     const futuro = precioOriginal * Math.pow(1 + tasaPlusvalia / 100, anos);
     const inflacion = precioOriginal * Math.pow(1 + tasaInflacion / 100, anos);
     
@@ -90,7 +99,7 @@ export const CalculadoraPlusvalia = () => {
   const formatearMoneda = (valor: number) => 
     new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(valor);
 
-  // Pantalla de Carga de la IA
+  // Pantalla de Carga
   if (loading || analizandoIA) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center font-sans">
@@ -124,7 +133,7 @@ export const CalculadoraPlusvalia = () => {
           <p className="text-gray-500 text-sm mt-2">Proyecta el crecimiento de tu inversión frente a la inflación.</p>
         </section>
 
-        {/* Tarjeta de Transparencia (Datos Extraídos) */}
+        {/* Tarjeta de Resumen */}
         <div className="bg-[#00213b] text-white rounded-3xl p-5 shadow-md flex flex-col gap-4 relative overflow-hidden">
            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
            
@@ -226,7 +235,6 @@ export const CalculadoraPlusvalia = () => {
             />
           </div>
 
-          {/* DATO FIJO DE AUTORIDAD: PLUSVALÍA DE LA ZONA */}
           <div className="space-y-3 mt-6">
             <div className="flex justify-between items-center mb-1">
               <label className="text-[10px] font-black text-[#00213b] uppercase tracking-widest flex items-center gap-1">
@@ -242,18 +250,17 @@ export const CalculadoraPlusvalia = () => {
             <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden shadow-inner relative">
               <div 
                 className="bg-[#C5A059] h-full rounded-full transition-all duration-500 relative" 
-                style={{ width: `${(tasaPlusvalia / 15) * 100}%` }}
+                style={{ width: `${(tasaPlusvalia / 18) * 100}%` }}
               >
                 <div className="absolute top-0 left-0 w-full h-full bg-white opacity-20"></div>
               </div>
             </div>
             <p className="text-[9px] text-gray-400 mt-1 flex justify-end items-center gap-1 font-medium italic">
-              *Tasa ajustada por ubicación, estado y tiempo.
+              *Tasa ajustada por ubicación ({zonaAnalizada}), estado y tiempo.
             </p>
           </div>
         </div>
 
-        {/* BOTÓN DE SIGUIENTE PASO: GALERÍA */}
         <div className="mt-8 pb-8 px-4">
           <button 
             onClick={() => navigate(`/galeria/${idVisita}`)}
