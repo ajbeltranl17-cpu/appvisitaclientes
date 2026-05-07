@@ -20,12 +20,14 @@ export const EncabezadoGlobal = ({
   const { idVisita } = useParams();
   const [menuAbierto, setMenuAbierto] = useState(false);
 
+  // Se agregó "Mis Deseos" a la lista
   const menuItems = [
     { title: 'Dashboard', icon: 'home', route: `/dashboard/${idVisita}` },
     { title: 'Análisis de la Zona', icon: 'map', route: `/analisis/${idVisita}` },
     { title: 'Galería', icon: 'photo_library', route: `/galeria/${idVisita}` },
     { title: 'Diseño IA', icon: 'auto_awesome', route: `/diseno-ia/${idVisita}` },
     { title: 'Swipe Pareja', icon: 'swipe', route: `/swipe/${idVisita}` },
+    { title: 'Mis Deseos', icon: 'favorite', route: `/mis-deseos/${idVisita}` },
     { title: 'Catálogo', icon: 'account_balance', route: `/catalogo/${idVisita}` },
     { title: 'Comparativa', icon: 'balance', route: `/matriz/${idVisita}` },
     { title: 'Plusvalía', icon: 'trending_up', route: `/plusvalia/${idVisita}` },
